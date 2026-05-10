@@ -1,15 +1,16 @@
 <template>
-  <div class="flex-1 p-6 bg-[#F8F9FA] overflow-hidden h-full flex flex-col gap-4">
+  <div class="flex-1 p-6 bg-app-canvas overflow-hidden h-full flex flex-col gap-4">
 
     <!-- 헤더 -->
     <header class="flex justify-between items-center shrink-0">
       <div>
         <h2 class="text-2xl font-black">⏱️ 공부 중...</h2>
-        <p class="text-gray-400 text-xs font-bold mt-0.5">현재 작업: {{ currentTask?.title || '항목 없음' }}</p>
+        <p class="text-app-muted text-xs font-bold mt-0.5">현재 작업: {{ currentTask?.title || '항목 없음' }}</p>
       </div>
       <button
+        type="button"
         @click="showBatteryInfo = !showBatteryInfo"
-        class="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 text-green-700 rounded-xl font-bold text-xs hover:bg-green-100 transition"
+        class="flex items-center gap-2 px-4 py-2 rounded-xl border border-leaf/35 bg-leaf-light/25 font-bold text-xs text-leaf transition hover:bg-leaf-light/40"
       >
         🔋 절전 포토 · 5분 주기 관찰
       </button>
@@ -20,22 +21,22 @@
 
       <!-- 왼쪽: 타이머 패널 -->
       <div class="bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center justify-center p-8 relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-b from-purple-50/60 to-white pointer-events-none rounded-3xl" />
+        <div class="absolute inset-0 bg-gradient-to-b from-brand-50/70 to-white pointer-events-none rounded-3xl" />
 
-        <p class="text-xs text-gray-400 font-black uppercase tracking-widest mb-4 z-10">현재 시간</p>
+        <p class="text-xs text-app-muted font-black uppercase tracking-widest mb-4 z-10">현재 시간</p>
 
         <!-- 메인 타이머 -->
         <div
           class="text-[72px] font-black tracking-tighter tabular-nums z-10 leading-none mb-2 transition-all duration-300"
-          :class="isPaused ? 'text-purple-400 animate-pulse' : 'text-gray-800'"
+          :class="isPaused ? 'text-brand-400 animate-pulse' : 'text-app-ink'"
         >
           {{ formattedTime }}
         </div>
 
-        <div v-if="isPaused" class="text-xs text-purple-400 font-black mb-4 z-10">⏸ 일시정지됨</div>
+        <div v-if="isPaused" class="text-xs text-brand-500 font-black mb-4 z-10">⏸ 일시정지됨</div>
 
-        <p class="text-xs text-gray-400 font-bold mb-6 z-10">
-          오늘 누적: <span class="text-gray-600 font-black">{{ formattedAccumulated }}</span>
+        <p class="text-xs text-app-muted font-bold mb-6 z-10">
+          오늘 누적: <span class="text-stem font-black">{{ formattedAccumulated }}</span>
           · 자리비움: <span class="text-red-400 font-black">{{ formattedAbsence }} ({{ absenceCount }}회)</span>
         </p>
 
@@ -47,29 +48,31 @@
               :key="i"
               :class="[
                 'w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all duration-500',
-                i <= completedGrapes ? 'bg-purple-500 shadow-md scale-110' : 'bg-gray-100'
+                i <= completedGrapes ? 'bg-brand-500 shadow-md scale-110' : 'bg-gray-100'
               ]"
             >
               <span v-if="i <= completedGrapes">🍇</span>
             </div>
           </div>
-          <p class="text-sm font-black text-gray-600">
+          <p class="text-sm font-black text-stem">
             {{ completedGrapes }} / {{ totalGrapes }} 알
-            <span class="text-gray-400 font-bold text-xs ml-2">· 다음까지 {{ minutesToNext }}분</span>
+            <span class="text-app-muted font-bold text-xs ml-2">· 다음까지 {{ minutesToNext }}분</span>
           </p>
         </div>
 
         <!-- 컨트롤 버튼 -->
         <div class="flex gap-3 z-10">
           <button
+            type="button"
             @click="togglePause"
-            class="px-6 py-3 bg-white border-2 border-gray-200 rounded-2xl font-black text-sm hover:border-purple-300 hover:text-purple-600 transition shadow-sm"
+            class="px-6 py-3 bg-white border-2 border-gray-200 rounded-2xl font-black text-sm shadow-sm transition hover:border-brand-300 hover:text-brand-600"
           >
             {{ isPaused ? '▶ 재개하기' : '⏸ 잠시 쉬기' }}
           </button>
           <button
+            type="button"
             @click="stopSession"
-            class="px-6 py-3 bg-gray-800 text-white rounded-2xl font-black text-sm hover:bg-gray-900 transition shadow-sm"
+            class="px-6 py-3 rounded-2xl bg-app-ink font-black text-sm text-white shadow-sm transition hover:bg-brand-700"
           >
             ■ 정지 (기록 작성)
           </button>
@@ -80,40 +83,43 @@
       <div class="flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
 
         <!-- 📷 카메라 스냅샷 영역 (백엔드 연결 전 placeholder) -->
-        <div class="bg-gray-800 rounded-2xl overflow-hidden shadow-sm shrink-0 relative">
-          <div class="w-full h-36 flex flex-col items-center justify-center gap-2">
-            <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+        <div class="rounded-2xl bg-stem overflow-hidden shadow-sm shrink-0 relative">
+          <div class="flex h-36 w-full flex-col items-center justify-center gap-2">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-stem-light/35">
               <span class="text-xl">📷</span>
             </div>
-            <p class="text-gray-500 text-[11px] font-bold">카메라 미리보기</p>
-            <p class="text-gray-600 text-[10px]">백엔드 연결 후 활성화</p>
+            <p class="text-[11px] font-bold text-peach">카메라 미리보기</p>
+            <p class="text-[10px] text-peach/85">백엔드 연결 후 활성화</p>
           </div>
           <!-- 다음 확인 카운트다운: 백엔드가 줄 값 표시 자리 -->
-          <div class="absolute bottom-2 right-2 bg-black/60 text-gray-400 text-[10px] font-black px-2 py-1 rounded-lg">
+          <div class="absolute bottom-2 right-2 rounded-lg bg-black/55 px-2 py-1 font-black text-[10px] text-peach/90">
             다음 확인: {{ nextSnapshotCountdown }}
           </div>
         </div>
 
         <!-- 배터리 절약 모드 안내 -->
         <div
-          :class="['rounded-2xl border-2 p-4 shrink-0 transition-all', showBatteryInfo ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-100']"
+          :class="[
+            'shrink-0 rounded-2xl border-2 p-4 transition-all',
+            showBatteryInfo ? 'border-leaf/40 bg-leaf-light/20' : 'border-gray-100 bg-gray-50'
+          ]"
         >
-          <p class="text-xs font-black text-gray-700 mb-1">🔋 배터리 절약 모드</p>
-          <p class="text-[11px] text-gray-500 font-bold leading-relaxed">
+          <p class="mb-1 font-black text-xs text-stem">🔋 배터리 절약 모드</p>
+          <p class="text-[11px] font-bold leading-relaxed text-app-muted">
             카메라는 5분마다 잠깐 켜져 자리에 없는지 어두운지 확인해요.<br />
             그 외 시간에는 꺼져 있습니다.
           </p>
         </div>
 
         <!-- 지금 하는 중 -->
-        <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm shrink-0">
-          <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-3">지금 하는 중</p>
-          <div v-if="currentTask" class="flex items-start gap-2 mb-3">
-            <span class="text-purple-500 font-black text-sm shrink-0">✓</span>
-            <span class="font-black text-sm text-gray-800">{{ currentTask.title }}</span>
+        <div class="shrink-0 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+          <p class="mb-3 font-black text-[10px] uppercase tracking-widest text-app-muted">지금 하는 중</p>
+          <div v-if="currentTask" class="mb-3 flex items-start gap-2">
+            <span class="shrink-0 font-black text-sm text-brand-500">✓</span>
+            <span class="font-black text-sm text-app-ink">{{ currentTask.title }}</span>
           </div>
           <div v-if="upcomingTasks.length > 0">
-            <p class="text-[10px] text-gray-400 font-bold mb-2">다음 →</p>
+            <p class="mb-2 font-bold text-[10px] text-app-muted">다음 →</p>
             <div
               v-for="task in upcomingTasks.slice(0, 3)"
               :key="task.id"
@@ -124,8 +130,9 @@
           </div>
           <button
             v-if="currentTask"
+            type="button"
             @click="completeCurrentTask"
-            class="w-full mt-3 py-2 bg-purple-50 text-purple-600 rounded-xl font-black text-xs hover:bg-purple-100 transition"
+            class="mt-3 w-full rounded-xl bg-brand-50 py-2 font-black text-xs text-brand-600 transition hover:bg-brand-100"
           >
             ✓ 완료 → 다음 항목
           </button>
@@ -143,11 +150,11 @@
               <span class="text-gray-300 font-bold shrink-0 tabular-nums">{{ log.time }}</span>
               <span
                 :class="[
-                  'font-bold px-2 py-0.5 rounded-lg text-[10px] shrink-0',
-                  log.type === 'present'  ? 'bg-green-100 text-green-600'  :
-                  log.type === 'absent'   ? 'bg-red-100 text-red-500'      :
-                  log.type === 'resume'   ? 'bg-purple-100 text-purple-600':
-                                            'bg-gray-100 text-gray-500'
+                  'shrink-0 rounded-lg px-2 py-0.5 font-bold text-[10px]',
+                  log.type === 'present' ? 'bg-leaf-light/50 text-leaf' :
+                  log.type === 'absent' ? 'bg-blush/80 text-red-700' :
+                  log.type === 'resume' ? 'bg-brand-100 text-brand-600' :
+                  'bg-gray-100 text-gray-500'
                 ]"
               >
                 {{ log.type === 'present' ? '✓ 있음' :
