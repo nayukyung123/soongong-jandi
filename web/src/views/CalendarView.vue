@@ -1,142 +1,163 @@
 <template>
-  <div class="flex-1 p-8 bg-app-canvas overflow-y-auto h-full">
-    <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
-      <div>
-        <h2 class="text-2xl font-black flex items-center gap-2">
-          📅 {{ currentYear }}년 {{ currentMonth }}월
-        </h2>
-        <p class="text-gray-400 text-sm font-bold mt-1">
-          달력에서 날짜 칸을 누르면 그날 계획을 작성할 플래너가 열려요.
-        </p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <button
-          type="button"
-          @click="changeMonth(-1)"
-          class="px-4 py-2 bg-white border border-gray-200 rounded-xl font-bold hover:bg-gray-100 text-sm"
-        >
-          〈 {{ currentMonth - 1 < 1 ? 12 : currentMonth - 1 }}월
-        </button>
-        <button
-          type="button"
-          @click="changeMonth(1)"
-          class="px-4 py-2 bg-white border border-gray-200 rounded-xl font-bold hover:bg-gray-100 text-sm"
-        >
-          {{ currentMonth + 1 > 12 ? 1 : currentMonth + 1 }}월 〉
-        </button>
+  <div class="calendar-page">
+    <header class="calendar-header">
+      <h2 class="calendar-title">
+        <img
+          class="calendar-title__icon"
+          src="/images/calendar/grape-mascot.png"
+          alt=""
+          width="36"
+          height="36"
+        />
+        {{ rangeTitle }}
+      </h2>
+      <div class="calendar-header-actions">
+        <div class="calendar-view-switch" role="tablist" aria-label="달력 보기 단위">
+          <button
+            type="button"
+            role="tab"
+            :aria-selected="viewMode === 'day'"
+            class="calendar-view-switch__btn"
+            :class="{ 'is-active': viewMode === 'day' }"
+            @click="viewMode = 'day'"
+          >
+            일간
+          </button>
+          <button
+            type="button"
+            role="tab"
+            :aria-selected="viewMode === 'week'"
+            class="calendar-view-switch__btn"
+            :class="{ 'is-active': viewMode === 'week' }"
+            @click="viewMode = 'week'"
+          >
+            주간
+          </button>
+          <button
+            type="button"
+            role="tab"
+            :aria-selected="viewMode === 'month'"
+            class="calendar-view-switch__btn"
+            :class="{ 'is-active': viewMode === 'month' }"
+            @click="viewMode = 'month'"
+          >
+            월간
+          </button>
+        </div>
+        <div class="calendar-toolbar">
+          <button type="button" class="calendar-nav-btn" @click="shiftPeriod(-1)">
+            {{ navPrevLabel }}
+          </button>
+          <button type="button" class="calendar-nav-btn" @click="shiftPeriod(1)">
+            {{ navNextLabel }}
+          </button>
+        </div>
       </div>
     </header>
 
-    <!-- 캘린더 그리드 -->
-    <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden mb-6 shadow-sm">
-      <div class="grid grid-cols-7">
-        <div
-          v-for="day in ['일', '월', '화', '수', '목', '금', '토']"
-          :key="day"
-          class="p-3 text-center text-xs font-black text-gray-400 border-b border-gray-100"
-        >
-          {{ day }}
-        </div>
-      </div>
-      <div class="grid grid-cols-7">
-        <div
-          v-for="empty in currentCalendar.startDay"
-          :key="'e-' + empty"
-          class="h-24 border-b border-r border-gray-50"
-        />
-        <div
-          v-for="date in currentCalendar.lastDate"
-          :key="date"
-          @click="selectDate(date)"
-          :class="[
-            'h-24 p-2 cursor-pointer transition border-b border-r border-gray-50 relative',
-            isSameDay(date) ? 'bg-brand-50 ring-2 ring-inset ring-brand-400' : 'hover:bg-brand-50'
-          ]"
-        >
-          <span :class="['text-xs font-black', isSameDay(date) ? 'text-brand-600' : 'text-gray-400']">{{ date }}</span>
-          <div v-if="getDailyPlans(date).length > 0" class="mt-1">
-            <div class="bg-brand-100 text-brand-600 text-[10px] px-2 py-1 rounded-lg font-bold text-center">
-              🍇 {{ getDailyPlans(date).length }}개
-            </div>
-            <div class="text-[9px] text-brand-400 font-bold text-center mt-1">
-              {{ getTotalTime(date) }}분
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 선택한 날짜 요약 -->
-    <div class="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 class="text-lg font-black">{{ currentMonth }}월 {{ selectedDateNum }}일</h3>
-          <p class="text-sm text-gray-400 font-bold mt-1">
-            {{ dailyPlans.length }}개 계획 · 총 {{ totalMinutes }}분 예상
-          </p>
-        </div>
-        <button
-          type="button"
-          @click="$emit('open-planner')"
-          class="w-full sm:w-auto rounded-2xl bg-brand-600 px-6 py-3 font-black text-sm text-white shadow-lg transition hover:bg-brand-700"
-        >
-          플래너 열기
-        </button>
-      </div>
-    </div>
+    <CalendarDayBoard
+      v-if="viewMode === 'day'"
+      :view-date="viewDate"
+      :all-plans="allPlans"
+      @update:all-plans="$emit('update:allPlans', $event)"
+    />
+    <CalendarWeekBoard
+      v-else-if="viewMode === 'week'"
+      :anchor-date="viewDate"
+      :all-plans="allPlans"
+      :selected-date="selectedDate"
+      @update:selected-date="$emit('update:selectedDate', $event)"
+      @open-planner="$emit('open-planner')"
+    />
+    <CalendarBoard
+      v-else
+      :year="calendarYear"
+      :month="calendarMonth"
+      :all-plans="allPlans"
+      :selected-date="selectedDate"
+      @update:selected-date="onBoardSelectDate"
+      @open-planner="$emit('open-planner')"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
+import CalendarBoard from '../components/CalendarBoard.vue';
+import CalendarWeekBoard from '../components/CalendarWeekBoard.vue';
+import CalendarDayBoard from '../components/CalendarDayBoard.vue';
+import { startOfDay, startOfWeekSunday } from '../composables/useCalendarPlanHelpers.js';
+import '../styles/calendar.css';
 
 const props = defineProps(['allPlans', 'selectedDate']);
-const emit = defineEmits(['update:allPlans', 'update:selectedDate', 'open-planner']);
+const emit = defineEmits(['update:selectedDate', 'update:allPlans', 'open-planner']);
 
-const currentYear = ref(props.selectedDate.getFullYear());
-const currentMonth = ref(props.selectedDate.getMonth() + 1);
-const selectedDateNum = computed(() => props.selectedDate.getDate());
+/** @type {import('vue').Ref<'day' | 'week' | 'month'>} */
+const viewMode = ref('month');
 
-const getDateKey = (date) =>
-  `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+const viewDate = ref(startOfDay(new Date(props.selectedDate)));
 
-const dailyPlans = computed({
-  get: () => props.allPlans[getDateKey(selectedDateNum.value)] || [],
-  set: (val) => emit('update:allPlans', { ...props.allPlans, [getDateKey(selectedDateNum.value)]: val })
-});
-
-const getDailyPlans = (date) => props.allPlans[getDateKey(date)] || [];
-
-const getTotalTime = (date) =>
-  getDailyPlans(date).reduce((sum, p) => sum + (p.minutes || 0), 0);
-
-const totalMinutes = computed(() =>
-  dailyPlans.value.reduce((sum, p) => sum + (p.minutes || 0), 0)
+watch(
+  () => props.selectedDate,
+  (d) => {
+    viewDate.value = startOfDay(new Date(d));
+  }
 );
 
-const currentCalendar = computed(() => ({
-  startDay: new Date(currentYear.value, currentMonth.value - 1, 1).getDay(),
-  lastDate: new Date(currentYear.value, currentMonth.value, 0).getDate()
-}));
+const calendarYear = computed(() => viewDate.value.getFullYear());
+const calendarMonth = computed(() => viewDate.value.getMonth() + 1);
 
-const selectDate = (date) => {
-  emit('update:selectedDate', new Date(currentYear.value, currentMonth.value - 1, date));
-  emit('open-planner');
-};
+const rangeTitle = computed(() => {
+  const d = viewDate.value;
+  const y = d.getFullYear();
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  const dow = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
+  if (viewMode.value === 'month') return `${y}년 ${m}월`;
+  if (viewMode.value === 'day') return `${y}년 ${m}월 ${day}일 (${dow})`;
+  const ws = startOfWeekSunday(d);
+  const we = new Date(ws);
+  we.setDate(we.getDate() + 6);
+  const fmt = (x) =>
+    `${x.getFullYear()}.${String(x.getMonth() + 1).padStart(2, '0')}.${String(x.getDate()).padStart(2, '0')}`;
+  return `${fmt(ws)} – ${fmt(we)}`;
+});
 
-const isSameDay = (date) =>
-  props.selectedDate.getFullYear() === currentYear.value &&
-  props.selectedDate.getDate() === date &&
-  props.selectedDate.getMonth() + 1 === currentMonth.value;
-
-const changeMonth = (delta) => {
-  currentMonth.value += delta;
-  if (currentMonth.value > 12) {
-    currentMonth.value = 1;
-    currentYear.value++;
-  } else if (currentMonth.value < 1) {
-    currentMonth.value = 12;
-    currentYear.value--;
+function shiftPeriod(delta) {
+  const d = new Date(viewDate.value);
+  if (viewMode.value === 'month') {
+    d.setMonth(d.getMonth() + delta);
+  } else if (viewMode.value === 'week') {
+    d.setDate(d.getDate() + delta * 7);
+  } else {
+    d.setDate(d.getDate() + delta);
   }
-};
+  viewDate.value = startOfDay(d);
+}
+
+const navPrevLabel = computed(() => {
+  if (viewMode.value === 'month') {
+    const prev = new Date(viewDate.value);
+    prev.setMonth(prev.getMonth() - 1);
+    return `〈 ${prev.getMonth() + 1}월`;
+  }
+  if (viewMode.value === 'week') return '〈 이전 주';
+  return '〈 전날';
+});
+
+const navNextLabel = computed(() => {
+  if (viewMode.value === 'month') {
+    const next = new Date(viewDate.value);
+    next.setMonth(next.getMonth() + 1);
+    return `${next.getMonth() + 1}월 〉`;
+  }
+  if (viewMode.value === 'week') return '다음 주 〉';
+  return '다음날 〉';
+});
+
+/** 월간 그리드에서 날짜 선택 시 헤더 기준일도 맞춤 */
+function onBoardSelectDate(d) {
+  viewDate.value = startOfDay(new Date(d));
+  emit('update:selectedDate', d);
+}
 </script>

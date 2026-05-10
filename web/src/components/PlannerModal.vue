@@ -47,7 +47,7 @@
           </div>
         </header>
 
-        <div class="min-h-0 flex-1 overflow-y-auto">
+        <div class="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-4 pt-2 md:px-6 md:pb-6">
           <DayPlanner v-model:all-plans="allPlansModel" :current-date="currentDate" />
         </div>
       </div>

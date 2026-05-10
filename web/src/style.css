@@ -49,15 +49,57 @@
 }
 
 @layer base {
+  /*
+    커스텀 커서 — public/images/cursor/bee-cursor.png (64×64 권장 · Windows는 보통 128px 초과 시 무시)
+    핫스팟은 클릭 기준점 (현재 이미지 중심 근처)
+  */
+  :root {
+    --app-cursor-bee: url('/images/cursor/bee-cursor.png') 20 24, auto;
+  }
+
   html {
     @apply font-sans antialiased text-app-ink;
+    cursor: var(--app-cursor-bee);
   }
 
   body {
     @apply m-0 min-h-dvh bg-app-canvas;
+    cursor: var(--app-cursor-bee);
   }
 
   #app {
     @apply min-h-dvh w-full;
+    cursor: var(--app-cursor-bee);
+  }
+
+  /*
+    Tailwind·브라우저 기본이 주는 cursor:pointer 등이 상속을 덮어씀 → 같은 커서로 통일
+    (텍스트 입력은 아래에서 text로 되돌림)
+  */
+  button,
+  a,
+  [role='button'],
+  label,
+  summary,
+  input[type='checkbox'],
+  input[type='radio'],
+  input[type='submit'],
+  input[type='button'],
+  input[type='reset'],
+  .cursor-pointer,
+  .cursor-grab {
+    cursor: var(--app-cursor-bee) !important;
+  }
+
+  /* 텍스트 입력·선택은 I-beam 유지 */
+  input[type='text'],
+  input[type='search'],
+  input[type='email'],
+  input[type='password'],
+  input[type='number'],
+  input:not([type]),
+  textarea,
+  [contenteditable='true'] {
+    cursor: text !important;
   }
 }
