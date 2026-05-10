@@ -1,15 +1,34 @@
 <template>
-  <div class="flex-1 p-8 bg-[#F8F9FA] overflow-y-auto h-full">
-    <header class="mb-6 flex justify-between items-center">
+  <div class="flex-1 p-8 bg-app-canvas overflow-y-auto h-full">
+    <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
       <div>
         <h2 class="text-2xl font-black flex items-center gap-2">
-          📅 {{ currentYear }}년 {{ currentMonth }}월 공부 계획
+          📅 {{ currentYear }}년 {{ currentMonth }}월
         </h2>
-        <p class="text-gray-400 text-sm font-bold mt-1">날짜를 고르고 그날의 공부 항목을 적어두세요.</p>
+        <p class="text-gray-400 text-sm font-bold mt-1">날짜를 고른 뒤 플래너에서 그날 계획을 세울 수 있어요.</p>
       </div>
-      <div class="flex gap-2">
-        <button @click="changeMonth(-1)" class="px-4 py-2 bg-white border rounded-xl font-bold hover:bg-gray-100 text-sm">〈 {{ currentMonth - 1 < 1 ? 12 : currentMonth - 1 }}월</button>
-        <button @click="changeMonth(1)" class="px-4 py-2 bg-white border rounded-xl font-bold hover:bg-gray-100 text-sm">{{ currentMonth + 1 > 12 ? 1 : currentMonth + 1 }}월 〉</button>
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          @click="changeMonth(-1)"
+          class="px-4 py-2 bg-white border border-gray-200 rounded-xl font-bold hover:bg-gray-100 text-sm"
+        >
+          〈 {{ currentMonth - 1 < 1 ? 12 : currentMonth - 1 }}월
+        </button>
+        <button
+          type="button"
+          @click="changeMonth(1)"
+          class="px-4 py-2 bg-white border border-gray-200 rounded-xl font-bold hover:bg-gray-100 text-sm"
+        >
+          {{ currentMonth + 1 > 12 ? 1 : currentMonth + 1 }}월 〉
+        </button>
+        <button
+          type="button"
+          @click="$emit('open-planner')"
+          class="px-4 py-2 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 text-sm shadow-md"
+        >
+          ✏️ 플래너 열기
+        </button>
       </div>
     </header>
 
@@ -20,25 +39,31 @@
           v-for="day in ['일', '월', '화', '수', '목', '금', '토']"
           :key="day"
           class="p-3 text-center text-xs font-black text-gray-400 border-b border-gray-100"
-        >{{ day }}</div>
+        >
+          {{ day }}
+        </div>
       </div>
       <div class="grid grid-cols-7">
-        <div v-for="empty in currentCalendar.startDay" :key="'e-' + empty" class="h-24 border-b border-r border-gray-50" />
+        <div
+          v-for="empty in currentCalendar.startDay"
+          :key="'e-' + empty"
+          class="h-24 border-b border-r border-gray-50"
+        />
         <div
           v-for="date in currentCalendar.lastDate"
           :key="date"
           @click="selectDate(date)"
           :class="[
             'h-24 p-2 cursor-pointer transition border-b border-r border-gray-50 relative',
-            isSameDay(date) ? 'bg-purple-50 ring-2 ring-inset ring-purple-400' : 'hover:bg-purple-50'
+            isSameDay(date) ? 'bg-brand-50 ring-2 ring-inset ring-brand-400' : 'hover:bg-brand-50'
           ]"
         >
-          <span :class="['text-xs font-black', isSameDay(date) ? 'text-purple-600' : 'text-gray-400']">{{ date }}</span>
+          <span :class="['text-xs font-black', isSameDay(date) ? 'text-brand-600' : 'text-gray-400']">{{ date }}</span>
           <div v-if="getDailyPlans(date).length > 0" class="mt-1">
-            <div class="bg-purple-100 text-purple-600 text-[10px] px-2 py-1 rounded-lg font-bold text-center">
+            <div class="bg-brand-100 text-brand-600 text-[10px] px-2 py-1 rounded-lg font-bold text-center">
               🍇 {{ getDailyPlans(date).length }}개
             </div>
-            <div class="text-[9px] text-purple-400 font-bold text-center mt-1">
+            <div class="text-[9px] text-brand-400 font-bold text-center mt-1">
               {{ getTotalTime(date) }}분
             </div>
           </div>
@@ -46,76 +71,23 @@
       </div>
     </div>
 
-    <!-- 선택된 날짜 계획 -->
+    <!-- 선택한 날짜 요약 -->
     <div class="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-      <div class="flex justify-between items-center mb-5">
-        <h3 class="text-lg font-black">{{ currentMonth }}월 {{ selectedDateNum }}일의 계획</h3>
-        <span class="text-sm text-gray-400 font-bold">
-          합계: {{ totalMinutes }}분 · 총 {{ dailyPlans.length }}개
-        </span>
-      </div>
-
-      <!-- 계획 목록 -->
-      <div class="space-y-3 mb-4">
-        <div
-          v-for="(plan, index) in dailyPlans"
-          :key="plan.id"
-          class="flex items-center gap-3 p-4 border-2 border-gray-50 rounded-2xl hover:border-purple-100 transition group"
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 class="text-lg font-black">{{ currentMonth }}월 {{ selectedDateNum }}일</h3>
+          <p class="text-sm text-gray-400 font-bold mt-1">
+            {{ dailyPlans.length }}개 계획 · 총 {{ totalMinutes }}분 예상
+          </p>
+        </div>
+        <button
+          type="button"
+          @click="$emit('open-planner')"
+          class="w-full sm:w-auto py-3 px-6 bg-brand-600 text-white rounded-2xl font-black text-sm shadow-lg hover:bg-brand-700 transition"
         >
-          <span class="text-gray-300 cursor-grab text-lg">≡</span>
-          <input type="checkbox" v-model="plan.completed" class="w-5 h-5 accent-purple-600 cursor-pointer" />
-          <span class="flex-1 font-bold text-sm" :class="plan.completed ? 'line-through text-gray-300' : 'text-gray-700'">
-            {{ plan.title }}
-          </span>
-          <!-- 시간 입력 -->
-          <div class="flex items-center gap-1 bg-purple-50 rounded-xl px-3 py-1">
-            <input
-              type="number"
-              v-model.number="plan.minutes"
-              min="0" max="480" step="10"
-              class="w-12 bg-transparent text-center text-sm font-black text-purple-600 outline-none"
-              @click.stop
-            />
-            <span class="text-xs text-purple-400 font-bold">분</span>
-          </div>
-          <button @click="removePlan(index)" class="text-gray-300 hover:text-red-400 text-sm opacity-0 group-hover:opacity-100 transition">✕</button>
-        </div>
+          이 날짜로 플래너 열기
+        </button>
       </div>
-
-      <!-- 빈 상태 -->
-      <div v-if="dailyPlans.length === 0" class="py-10 text-center border-2 border-dashed border-gray-100 rounded-2xl">
-        <p class="text-gray-400 font-bold text-sm">계획을 추가해보세요!</p>
-      </div>
-
-      <!-- 입력창 -->
-      <div class="mt-4 p-3 border-2 border-dashed border-gray-200 rounded-2xl flex gap-3 bg-gray-50">
-        <input
-          v-model="newPlanTitle"
-          @keyup.enter="addPlan"
-          type="text"
-          placeholder="+ 새 계획..."
-          class="flex-1 bg-transparent focus:outline-none font-bold text-sm placeholder:text-gray-300"
-        />
-        <div class="flex items-center gap-1 border-l border-gray-200 pl-3">
-          <input
-            v-model.number="newPlanMinutes"
-            type="number"
-            min="0" max="480" step="10"
-            class="w-14 text-center text-sm font-black text-purple-600 outline-none bg-transparent"
-            placeholder="60"
-          />
-          <span class="text-xs text-gray-400">분</span>
-        </div>
-        <button @click="addPlan" class="text-purple-600 font-black px-3 hover:scale-105 transition text-sm">+ 추가</button>
-      </div>
-
-      <!-- 이동 버튼 -->
-      <button
-        @click="$emit('change-page', 'planner')"
-        class="w-full mt-6 py-4 bg-purple-600 text-white rounded-2xl font-black text-base shadow-lg hover:bg-purple-700 transition"
-      >
-        다음 → 공부할 항목 선택
-      </button>
     </div>
   </div>
 </template>
@@ -124,13 +96,11 @@
 import { ref, computed } from 'vue';
 
 const props = defineProps(['allPlans', 'selectedDate']);
-const emit = defineEmits(['update:allPlans', 'update:selectedDate', 'change-page']);
+const emit = defineEmits(['update:allPlans', 'update:selectedDate', 'open-planner']);
 
 const currentYear = ref(props.selectedDate.getFullYear());
 const currentMonth = ref(props.selectedDate.getMonth() + 1);
 const selectedDateNum = computed(() => props.selectedDate.getDate());
-const newPlanTitle = ref('');
-const newPlanMinutes = ref(60);
 
 const getDateKey = (date) =>
   `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
@@ -159,27 +129,18 @@ const selectDate = (date) => {
 };
 
 const isSameDay = (date) =>
-  props.selectedDate.getDate() === date && props.selectedDate.getMonth() + 1 === currentMonth.value;
+  props.selectedDate.getFullYear() === currentYear.value &&
+  props.selectedDate.getDate() === date &&
+  props.selectedDate.getMonth() + 1 === currentMonth.value;
 
 const changeMonth = (delta) => {
   currentMonth.value += delta;
-  if (currentMonth.value > 12) { currentMonth.value = 1; currentYear.value++; }
-  else if (currentMonth.value < 1) { currentMonth.value = 12; currentYear.value--; }
-};
-
-const addPlan = () => {
-  if (!newPlanTitle.value.trim()) return;
-  dailyPlans.value = [
-    ...dailyPlans.value,
-    { id: Date.now(), title: newPlanTitle.value, completed: false, minutes: newPlanMinutes.value || 60 }
-  ];
-  newPlanTitle.value = '';
-  newPlanMinutes.value = 60;
-};
-
-const removePlan = (index) => {
-  const list = [...dailyPlans.value];
-  list.splice(index, 1);
-  dailyPlans.value = list;
+  if (currentMonth.value > 12) {
+    currentMonth.value = 1;
+    currentYear.value++;
+  } else if (currentMonth.value < 1) {
+    currentMonth.value = 12;
+    currentYear.value--;
+  }
 };
 </script>

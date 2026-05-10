@@ -1,52 +1,47 @@
 <template>
-  <div class="flex h-screen w-full bg-[#F8F9FA] overflow-hidden font-sans text-[#343A40]">
-    <Sidebar :active-page="currentPage" @change-page="setPage" />
+  <div class="flex h-screen w-full bg-app-canvas overflow-hidden font-sans text-app-ink">
+    <Sidebar :active-page="currentPage" @change-page="uiStore.setPage" />
 
     <main class="flex-1 min-w-0 h-full overflow-hidden flex flex-col">
-
-      <PlannerView
-        v-if="currentPage === 'planner' && !isStudying"
-        v-model:all-plans="allPlans"
-        v-model:current-date="selectedDate"
-        @start-study="startStudy"
-      />
-
-      <!-- 공부 중 화면 -->
       <StudySession
         v-if="isStudying"
-        v-model:all-plans="allPlans"
-        :current-date="selectedDate"
+        v-model:all-plans="plansStore.allPlans"
+        :current-date="plansStore.selectedDate"
         :start-task-index="studyStartIndex"
-        @session-end="endStudy"
+        @session-end="sessionStore.endStudy"
       />
 
       <CalendarView
         v-if="currentPage === 'calendar' && !isStudying"
-        v-model:all-plans="allPlans"
-        v-model:selected-date="selectedDate"
-        @change-page="setPage"
+        v-model:all-plans="plansStore.allPlans"
+        v-model:selected-date="plansStore.selectedDate"
+        @open-planner="uiStore.openPlannerModal"
       />
 
-      <div v-if="!['planner','calendar'].includes(currentPage) && !isStudying"
-           class="flex-1 flex items-center justify-center">
+      <div
+        v-if="currentPage !== 'calendar' && !isStudying"
+        class="flex-1 flex items-center justify-center"
+      >
         <p class="text-gray-300 font-black text-lg">🚧 준비 중입니다</p>
       </div>
     </main>
 
-    <!-- 세션 종료 모달 -->
-    <div v-if="showEndModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+    <div
+      v-if="showEndModal"
+      class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+    >
       <div class="bg-white rounded-3xl p-8 w-[480px] shadow-2xl">
         <div class="text-center mb-6">
           <div class="text-4xl mb-3">⏱️</div>
           <h3 class="text-2xl font-black">공부 기록 작성</h3>
-          <div class="flex justify-center gap-6 mt-4 bg-purple-50 rounded-2xl p-4">
+          <div class="flex justify-center gap-6 mt-4 bg-brand-50 rounded-2xl p-4">
             <div class="text-center">
               <p class="text-xs text-gray-400 font-bold">실 공부</p>
-              <p class="text-xl font-black text-gray-800">{{ formatMin(sessionResult.elapsed) }}</p>
+              <p class="text-xl font-black text-gray-800">{{ formatSecondsShort(sessionResult.elapsed) }}</p>
             </div>
             <div class="text-center">
               <p class="text-xs text-gray-400 font-bold">자리비움</p>
-              <p class="text-xl font-black text-gray-800">{{ formatMin(sessionResult.absenceTime) }}</p>
+              <p class="text-xl font-black text-gray-800">{{ formatSecondsShort(sessionResult.absenceTime) }}</p>
             </div>
             <div class="text-center">
               <p class="text-xs text-gray-400 font-bold">얻은 알</p>
@@ -55,42 +50,74 @@
           </div>
         </div>
 
-        <!-- 계획 체크 -->
         <p class="text-sm font-black text-gray-600 mb-3">오늘 계획 중 완료한 것은?</p>
         <div class="space-y-2 mb-5 max-h-40 overflow-y-auto">
           <label
             v-for="plan in todayPlans"
             :key="plan.id"
-            class="flex items-center gap-3 p-3 border-2 rounded-2xl cursor-pointer hover:border-purple-200 transition"
-            :class="plan.completed ? 'border-purple-200 bg-purple-50' : 'border-gray-100'"
+            class="flex items-center gap-3 p-3 border-2 rounded-2xl cursor-pointer hover:border-brand-200 transition"
+            :class="plan.completed ? 'border-brand-200 bg-brand-50' : 'border-gray-100'"
           >
-            <input type="checkbox" v-model="plan.completed" class="w-5 h-5 accent-purple-600" />
+            <input type="checkbox" v-model="plan.completed" class="w-5 h-5 accent-brand-600" />
             <span class="text-sm font-bold" :class="plan.completed ? 'line-through text-gray-400' : 'text-gray-700'">
               {{ plan.title }}
             </span>
           </label>
         </div>
 
-        <!-- 한줄 메모 -->
         <textarea
           v-model="sessionMemo"
           placeholder="예: chap 2까지 풀고 자리 비렸다가 좀 돌아옴..."
-          class="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-bold resize-none outline-none focus:border-purple-200 transition h-20 mb-5"
+          class="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-bold resize-none outline-none focus:border-brand-200 transition h-20 mb-5"
         />
 
         <div class="flex gap-3">
           <button
-            @click="discardSession"
+            type="button"
+            @click="sessionStore.discardSession"
             class="flex-1 py-3 border-2 border-gray-200 rounded-2xl font-black text-sm hover:bg-gray-50 transition"
           >
             버리기
           </button>
           <button
-            @click="saveSession"
-            class="flex-2 px-8 py-3 bg-purple-600 text-white rounded-2xl font-black text-sm hover:bg-purple-700 transition shadow-lg"
+            type="button"
+            @click="sessionStore.saveSession"
+            class="flex-[2] px-8 py-3 bg-brand-600 text-white rounded-2xl font-black text-sm hover:bg-brand-700 transition shadow-lg"
           >
             ✓ 기록 저장
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 일별 플래너 모달 -->
+    <div
+      v-if="plannerModalOpen && !isStudying"
+      class="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="planner-modal-title"
+      @click.self="uiStore.closePlannerModal"
+    >
+      <div
+        class="relative flex w-full max-w-5xl max-h-[92vh] flex-col overflow-hidden rounded-3xl bg-app-canvas shadow-2xl ring-1 ring-black/5"
+      >
+        <div class="flex shrink-0 items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
+          <h2 id="planner-modal-title" class="text-lg font-black text-gray-800">일별 계획</h2>
+          <button
+            type="button"
+            class="rounded-2xl px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100"
+            @click="uiStore.closePlannerModal"
+          >
+            닫기
+          </button>
+        </div>
+        <div class="min-h-0 flex-1 overflow-y-auto">
+          <DayPlanner
+            v-model:all-plans="plansStore.allPlans"
+            v-model:current-date="plansStore.selectedDate"
+            @start-study="onStartStudy"
+          />
         </div>
       </div>
     </div>
@@ -98,77 +125,29 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import Sidebar from './components/Sidebar.vue';
-import PlannerView from './views/PlannerView.vue';
+import DayPlanner from './components/DayPlanner.vue';
 import CalendarView from './views/CalendarView.vue';
 import StudySession from './views/StudySession.vue';
+import { usePlansStore } from './stores/plans';
+import { useUiStore } from './stores/ui';
+import { useSessionStore } from './stores/session';
+import { formatSecondsShort } from './utils/formatSession';
 
-const currentPage = ref('planner');
-const selectedDate = ref(new Date());
-const allPlans = ref(JSON.parse(localStorage.getItem('total_study_data') || '{}'));
+const plansStore = usePlansStore();
+const uiStore = useUiStore();
+const sessionStore = useSessionStore();
 
-watch(allPlans, (val) => {
-  localStorage.setItem('total_study_data', JSON.stringify(val));
-}, { deep: true });
+const { currentPage, plannerModalOpen } = storeToRefs(uiStore);
+const { isStudying, studyStartIndex, showEndModal, sessionResult, sessionMemo } = storeToRefs(sessionStore);
 
-const setPage = (page) => {
-  if (!isStudying.value) currentPage.value = page;
-};
+const todayPlans = computed(() => plansStore.allPlans[plansStore.dateKey] || []);
 
-// ─── 공부 세션 상태 ────────────────────────────────
-const isStudying = ref(false);
-const studyStartIndex = ref(0);
-const showEndModal = ref(false);
-const sessionResult = ref({});
-const sessionMemo = ref('');
-
-const dateKey = computed(() => {
-  const d = selectedDate.value;
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-});
-
-const todayPlans = computed(() => allPlans.value[dateKey.value] || []);
-
-// PlannerView에서 공부 시작 이벤트
-const startStudy = (taskIndex = 0) => {
-  studyStartIndex.value = taskIndex;
-  isStudying.value = true;
-  currentPage.value = 'planner'; // 사이드바 planner 유지
-};
-
-// StudySession에서 종료 이벤트
-const endStudy = (result) => {
-  sessionResult.value = result;
-  isStudying.value = false;
-  showEndModal.value = true;
-};
-
-const formatMin = (seconds) => {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  if (m >= 60) return `${Math.floor(m/60)}h ${m%60}m`;
-  return m > 0 ? `${m}m ${s}s` : `${s}s`;
-};
-
-const saveSession = () => {
-  // 메모나 세션 기록을 localStorage에 저장할 수 있음
-  const records = JSON.parse(localStorage.getItem('study_records') || '[]');
-  records.push({
-    date: dateKey.value,
-    elapsed: sessionResult.value.elapsed,
-    absence: sessionResult.value.absenceTime,
-    grapes: sessionResult.value.completedGrapes,
-    memo: sessionMemo.value,
-    savedAt: new Date().toISOString()
-  });
-  localStorage.setItem('study_records', JSON.stringify(records));
-  showEndModal.value = false;
-  sessionMemo.value = '';
-};
-
-const discardSession = () => {
-  showEndModal.value = false;
-  sessionMemo.value = '';
-};
+function onStartStudy(taskIndex = 0) {
+  sessionStore.startStudy(taskIndex);
+  uiStore.closePlannerModal();
+  uiStore.currentPage = 'calendar';
+}
 </script>
