@@ -2,7 +2,7 @@
   <div class="flex h-screen w-full bg-app-canvas overflow-hidden font-sans text-app-ink">
     <Sidebar :active-page="currentPage" @change-page="uiStore.setPage" />
 
-    <main class="flex-1 min-w-0 h-full overflow-hidden flex flex-col">
+    <main class="flex-1 min-w-0 h-full overflow-x-hidden overflow-y-visible flex flex-col">
       <StudySession
         v-if="isStudying"
         v-model:all-plans="plansStore.allPlans"
