@@ -5,7 +5,9 @@
         <h2 class="text-2xl font-black flex items-center gap-2">
           📅 {{ currentYear }}년 {{ currentMonth }}월
         </h2>
-        <p class="text-gray-400 text-sm font-bold mt-1">날짜를 고른 뒤 플래너에서 그날 계획을 세울 수 있어요.</p>
+        <p class="text-gray-400 text-sm font-bold mt-1">
+          달력에서 날짜 칸을 누르면 그날 계획을 작성할 플래너가 열려요.
+        </p>
       </div>
       <div class="flex flex-wrap gap-2">
         <button
@@ -21,13 +23,6 @@
           class="px-4 py-2 bg-white border border-gray-200 rounded-xl font-bold hover:bg-gray-100 text-sm"
         >
           {{ currentMonth + 1 > 12 ? 1 : currentMonth + 1 }}월 〉
-        </button>
-        <button
-          type="button"
-          @click="$emit('open-planner')"
-          class="px-4 py-2 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 text-sm shadow-md"
-        >
-          ✏️ 플래너 열기
         </button>
       </div>
     </header>
@@ -83,9 +78,9 @@
         <button
           type="button"
           @click="$emit('open-planner')"
-          class="w-full sm:w-auto py-3 px-6 bg-brand-600 text-white rounded-2xl font-black text-sm shadow-lg hover:bg-brand-700 transition"
+          class="w-full sm:w-auto rounded-2xl bg-brand-600 px-6 py-3 font-black text-sm text-white shadow-lg transition hover:bg-brand-700"
         >
-          이 날짜로 플래너 열기
+          플래너 열기
         </button>
       </div>
     </div>
@@ -126,6 +121,7 @@ const currentCalendar = computed(() => ({
 
 const selectDate = (date) => {
   emit('update:selectedDate', new Date(currentYear.value, currentMonth.value - 1, date));
+  emit('open-planner');
 };
 
 const isSameDay = (date) =>

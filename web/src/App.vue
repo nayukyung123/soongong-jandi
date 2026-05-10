@@ -90,37 +90,12 @@
       </div>
     </div>
 
-    <!-- 일별 플래너 모달 -->
-    <div
-      v-if="plannerModalOpen && !isStudying"
-      class="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="planner-modal-title"
-      @click.self="uiStore.closePlannerModal"
-    >
-      <div
-        class="relative flex w-full max-w-5xl max-h-[92vh] flex-col overflow-hidden rounded-3xl bg-app-canvas shadow-2xl ring-1 ring-black/5"
-      >
-        <div class="flex shrink-0 items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
-          <h2 id="planner-modal-title" class="text-lg font-black text-gray-800">일별 계획</h2>
-          <button
-            type="button"
-            class="rounded-2xl px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100"
-            @click="uiStore.closePlannerModal"
-          >
-            닫기
-          </button>
-        </div>
-        <div class="min-h-0 flex-1 overflow-y-auto">
-          <DayPlanner
-            v-model:all-plans="plansStore.allPlans"
-            v-model:current-date="plansStore.selectedDate"
-            @start-study="onStartStudy"
-          />
-        </div>
-      </div>
-    </div>
+    <PlannerModal
+      :show="plannerModalOpen && !isStudying"
+      v-model:all-plans="plansStore.allPlans"
+      v-model:current-date="plansStore.selectedDate"
+      @close="uiStore.closePlannerModal"
+    />
   </div>
 </template>
 
@@ -128,7 +103,7 @@
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import Sidebar from './components/Sidebar.vue';
-import DayPlanner from './components/DayPlanner.vue';
+import PlannerModal from './components/PlannerModal.vue';
 import CalendarView from './views/CalendarView.vue';
 import StudySession from './views/StudySession.vue';
 import { usePlansStore } from './stores/plans';
@@ -144,10 +119,4 @@ const { currentPage, plannerModalOpen } = storeToRefs(uiStore);
 const { isStudying, studyStartIndex, showEndModal, sessionResult, sessionMemo } = storeToRefs(sessionStore);
 
 const todayPlans = computed(() => plansStore.allPlans[plansStore.dateKey] || []);
-
-function onStartStudy(taskIndex = 0) {
-  sessionStore.startStudy(taskIndex);
-  uiStore.closePlannerModal();
-  uiStore.currentPage = 'calendar';
-}
 </script>
