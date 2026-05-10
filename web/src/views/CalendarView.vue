@@ -28,7 +28,7 @@
     </header>
 
     <!-- 캘린더 그리드 -->
-    <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden mb-6 shadow-sm">
+    <div class="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
       <div class="grid grid-cols-7">
         <div
           v-for="day in ['일', '월', '화', '수', '목', '금', '토']"
@@ -65,25 +65,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 선택한 날짜 요약 -->
-    <div class="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 class="text-lg font-black">{{ currentMonth }}월 {{ selectedDateNum }}일</h3>
-          <p class="text-sm text-gray-400 font-bold mt-1">
-            {{ dailyPlans.length }}개 계획 · 총 {{ totalMinutes }}분 예상
-          </p>
-        </div>
-        <button
-          type="button"
-          @click="$emit('open-planner')"
-          class="w-full sm:w-auto rounded-2xl bg-brand-600 px-6 py-3 font-black text-sm text-white shadow-lg transition hover:bg-brand-700"
-        >
-          플래너 열기
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -91,28 +72,18 @@
 import { ref, computed } from 'vue';
 
 const props = defineProps(['allPlans', 'selectedDate']);
-const emit = defineEmits(['update:allPlans', 'update:selectedDate', 'open-planner']);
+const emit = defineEmits(['update:selectedDate', 'open-planner']);
 
 const currentYear = ref(props.selectedDate.getFullYear());
 const currentMonth = ref(props.selectedDate.getMonth() + 1);
-const selectedDateNum = computed(() => props.selectedDate.getDate());
 
 const getDateKey = (date) =>
   `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-
-const dailyPlans = computed({
-  get: () => props.allPlans[getDateKey(selectedDateNum.value)] || [],
-  set: (val) => emit('update:allPlans', { ...props.allPlans, [getDateKey(selectedDateNum.value)]: val })
-});
 
 const getDailyPlans = (date) => props.allPlans[getDateKey(date)] || [];
 
 const getTotalTime = (date) =>
   getDailyPlans(date).reduce((sum, p) => sum + (p.minutes || 0), 0);
-
-const totalMinutes = computed(() =>
-  dailyPlans.value.reduce((sum, p) => sum + (p.minutes || 0), 0)
-);
 
 const currentCalendar = computed(() => ({
   startDay: new Date(currentYear.value, currentMonth.value - 1, 1).getDay(),
