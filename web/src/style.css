@@ -1,0 +1,105 @@
+@import 'tailwindcss';
+
+/*
+  포도 농장 — 브랜드 컬러
+  포도 퍼플 #6F3FAF · 딥 #4F2480 · 라이트 퍼플 #BFA2DB · 연보라 #E6D6FA · 하이라이트 #D6B7FF
+  잎 #5FA35F · 연두 #A8D681 · 줄기 #7A5230 · 연한 브라운 #B5814E
+  블러셔 #FFB6C1 · 피치 #FFD2B6 · 크림 #F8F3E9 · 인크 #221818
+*/
+
+@theme {
+  --font-sans:
+    'Pretendard Variable', Pretendard, ui-sans-serif, system-ui, sans-serif,
+    'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  --font-display:
+    'Pretendard Variable', Pretendard, ui-sans-serif, system-ui, sans-serif,
+    'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+
+  /* 페이지 뼈대 */
+  --color-farm-cream: #f8f3e9;
+  --color-farm-ink: #221818;
+  --color-farm-white: #ffffff;
+  --color-app-canvas: #f8f3e9;
+  --color-app-ink: #221818;
+  --color-app-muted: #6e5a58;
+
+  /* 포도 퍼플 스케일 (버튼·강조는 brand-600 / 호버 brand-700) */
+  --color-brand-50: #e6d6fa;
+  --color-brand-100: #e2cff8;
+  --color-brand-200: #d6b7ff;
+  --color-brand-300: #bfa2db;
+  --color-brand-400: #9579c4;
+  --color-brand-500: #6f3faf;
+  --color-brand-600: #6f3faf;
+  --color-brand-700: #4f2480;
+
+  /* 이름 그대로 쓰는 시맨틱 토큰 */
+  --color-grape: #6f3faf;
+  --color-grape-deep: #4f2480;
+  --color-grape-light: #bfa2db;
+  --color-grape-lavender: #e6d6fa;
+  --color-grape-highlight: #d6b7ff;
+
+  --color-leaf: #5fa35f;
+  --color-leaf-light: #a8d681;
+  --color-stem: #7a5230;
+  --color-stem-light: #b5814e;
+  --color-blush: #ffb6c1;
+  --color-peach: #ffd2b6;
+}
+
+@layer base {
+  /*
+    커스텀 커서 — public/images/cursor/bee-cursor.png (64×64 권장 · Windows는 보통 128px 초과 시 무시)
+    핫스팟은 클릭 기준점 (현재 이미지 중심 근처)
+  */
+  :root {
+    --app-cursor-bee: url('/images/cursor/bee-cursor.png') 20 24, auto;
+  }
+
+  html {
+    @apply font-sans antialiased text-app-ink;
+    cursor: var(--app-cursor-bee);
+  }
+
+  body {
+    @apply m-0 min-h-dvh bg-app-canvas;
+    cursor: var(--app-cursor-bee);
+  }
+
+  #app {
+    @apply min-h-dvh w-full;
+    cursor: var(--app-cursor-bee);
+  }
+
+  /*
+    Tailwind·브라우저 기본이 주는 cursor:pointer 등이 상속을 덮어씀 → 같은 커서로 통일
+    (텍스트 입력은 아래에서 text로 되돌림)
+  */
+  button,
+  a,
+  [role='button'],
+  label,
+  summary,
+  input[type='checkbox'],
+  input[type='radio'],
+  input[type='submit'],
+  input[type='button'],
+  input[type='reset'],
+  .cursor-pointer,
+  .cursor-grab {
+    cursor: var(--app-cursor-bee) !important;
+  }
+
+  /* 텍스트 입력·선택은 I-beam 유지 */
+  input[type='text'],
+  input[type='search'],
+  input[type='email'],
+  input[type='password'],
+  input[type='number'],
+  input:not([type]),
+  textarea,
+  [contenteditable='true'] {
+    cursor: text !important;
+  }
+}

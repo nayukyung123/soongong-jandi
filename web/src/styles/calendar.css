@@ -1,0 +1,497 @@
+/* 달력 전용 — 밭 프레임 배경 + 투명 날짜 칸 오버레이 (루트 폭 기준 cqw) */
+
+.calendar-page {
+  container-type: inline-size;
+  container-name: calendar-page;
+  box-sizing: border-box;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: visible;
+  padding: clamp(0.45rem, 2.4cqw, 1rem) clamp(0.55rem, 3.2cqw, 1.25rem) clamp(0.45rem, 2.5cqw, 0.95rem);
+  background-color: var(--color-brand-50, #e6d6fa);
+  background-image: linear-gradient(
+    180deg,
+    var(--color-brand-50, #e6d6fa) 0%,
+    var(--color-farm-cream, #f8f3e9) 100%
+  );
+}
+
+.calendar-header {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.25rem, 1.5cqw, 0.65rem);
+  margin-bottom: clamp(0.25rem, 1.8cqw, 0.65rem);
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .calendar-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.calendar-title {
+  margin: 0;
+  font-size: clamp(0.95rem, calc(0.45rem + 4.5cqw), 1.65rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--color-brand-600, #6f3faf);
+  display: flex;
+  align-items: center;
+  gap: clamp(0.2rem, 1.2cqw, 0.45rem);
+}
+
+.calendar-title__icon {
+  width: clamp(1.45rem, 8.5cqw, 2.6rem);
+  height: clamp(1.45rem, 8.5cqw, 2.6rem);
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.calendar-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.25rem, 1.5cqw, 0.45rem);
+}
+
+.calendar-nav-btn {
+  padding: clamp(0.28rem, 1.6cqw, 0.45rem) clamp(0.45rem, 2.6cqw, 0.75rem);
+  font-size: clamp(0.62rem, calc(0.32rem + 2cqw), 0.85rem);
+  font-weight: 700;
+  border-radius: clamp(0.45rem, 2cqw, 0.75rem);
+  border: 1px solid color-mix(in srgb, var(--color-brand-600, #6f3faf) 28%, transparent);
+  background: color-mix(in srgb, var(--color-farm-white, #ffffff) 88%, var(--color-brand-50, #e6d6fa));
+  color: var(--color-brand-600, #6f3faf);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.calendar-nav-btn:hover {
+  background: var(--color-brand-50, #e6d6fa);
+  border-color: color-mix(in srgb, var(--color-brand-600, #6f3faf) 45%, transparent);
+}
+
+/* 월 그리드 패널 — 밭/잔디 프레임 배경 */
+.calendar-board {
+  container-type: inline-size;
+  container-name: calendar-board;
+  box-sizing: border-box;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  /* 날짜 칸 scale 호버가 잘리지 않도록 (배경·모서리는 border-radius로 유지) */
+  overflow: visible;
+  padding-inline: clamp(0.65rem, 4.5cqw, 3rem);
+  padding-bottom: clamp(1rem, 7cqw, 3.25rem);
+  border-radius: clamp(0.65rem, 2.8cqw, 1.25rem);
+  border: 1px solid rgba(122, 82, 48, 0.28);
+  background-color: #c49a52;
+  background-image: url('/images/calendar/calendar-farm-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow:
+    0 clamp(1px, 0.35cqw, 3px) clamp(6px, 2.5cqw, 14px) rgba(82, 58, 34, 0.14),
+    inset 0 clamp(1px, 0.25cqw, 2px) 0 rgba(255, 255, 255, 0.35);
+}
+
+/* 요일 + 날짜를 같은 7열 그리드로 배치 → 요일 칸과 날짜 열이 항상 일치 */
+.calendar-unified {
+  box-sizing: border-box;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: auto auto repeat(var(--calendar-rows, 6), minmax(0, 1fr));
+  overflow: visible;
+}
+
+/* 요일 칸마다 동일 나무 간판 배경 — 불투명 단색 배경 없음 (calendar-board 기준 cqw로 간판·글자 크기 연동) */
+.calendar-unified > .calendar-weekday {
+  margin: 0;
+  padding: 0;
+  min-height: clamp(1.85rem, 11cqw, 3.75rem);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  background-image: url('/images/calendar/weekday-wood-sign.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: var(--color-stem, #7a5230);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.65),
+    0 0 8px rgba(255, 250, 240, 0.5);
+  border-bottom: none;
+  box-shadow: none;
+}
+
+.calendar-weekday__label {
+  display: block;
+  font-size: clamp(0.5rem, calc(0.28rem + 3.2cqw), 0.95rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-align: center;
+  color: inherit;
+  text-shadow: inherit;
+  margin-bottom: clamp(0.06rem, 0.9cqw, 0.35rem);
+  /* 한글 폰트 메트릭상 글자가 아래로 치우치는 보정 */
+  transform: translateY(-0.07em);
+}
+
+/* 요일 줄 바로 아래 — 포도 넝쿨 테두리 가로 반복 (음수 마진으로 간격 최소화) */
+.calendar-weekday-vine {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-top: calc(clamp(-0.45rem, -2.2cqw, -0.12rem) - clamp(1rem, 6cqw, 1.5rem));
+  height: clamp(0.75rem, 4.8cqw, 1.85rem);
+  min-height: 0.75rem;
+  pointer-events: none;
+  background-image: url('/images/calendar/weekday-vine-repeat.png');
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  background-position: left bottom;
+}
+
+.calendar-unified > .calendar-weekday:nth-child(1) {
+  color: color-mix(in srgb, var(--color-blush, #ffb6c1) 35%, #8b2222);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55),
+    0 0 6px rgba(255, 240, 240, 0.5);
+  border-top-left-radius: clamp(0.65rem, 2.8cqw, 1.25rem);
+}
+
+.calendar-unified > .calendar-weekday:nth-child(7) {
+  color: var(--color-brand-700, #4f2480);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6),
+    0 0 6px rgba(240, 230, 255, 0.45);
+  border-top-right-radius: clamp(0.65rem, 2.8cqw, 1.25rem);
+}
+
+.calendar-pad {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  align-self: stretch;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.calendar-pad--trail {
+  background: transparent;
+}
+
+.calendar-cell {
+  container-type: size;
+  container-name: cal-cell;
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 0;
+  height: 100%;
+  align-self: stretch;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: clamp(5px, min(10cqw, 8cqh), 12px);
+  cursor: pointer;
+  overflow: visible;
+  background-color: transparent;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* 얕은 벌집/블록 입체 — 칸 컨테이너(cqw/cqh) 기준 */
+  box-shadow:
+    inset max(1px, 0.22cqw) max(1px, 0.22cqw) 0 rgba(255, 255, 255, 0.32),
+    inset max(-1px, -0.22cqw) max(-1px, -0.22cqw) 0 rgba(0, 0, 0, 0.28),
+    clamp(1px, 0.35cqw, 4px) clamp(2px, 0.55cqw, 6px) clamp(4px, 1cqw, 10px) rgba(30, 22, 14, 0.38);
+  transition:
+    transform 0.12s ease,
+    filter 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.calendar-cell:hover {
+  z-index: 2;
+  filter: brightness(1.08);
+  transform: scale(1.02);
+  box-shadow:
+    inset max(1px, 0.22cqw) max(1px, 0.22cqw) 0 rgba(255, 255, 255, 0.38),
+    inset max(-1px, -0.22cqw) max(-1px, -0.22cqw) 0 rgba(0, 0, 0, 0.22),
+    clamp(2px, 0.45cqw, 5px) clamp(3px, 0.75cqw, 8px) clamp(6px, 1.4cqw, 12px) rgba(25, 18, 10, 0.45);
+}
+
+.calendar-cell:focus-visible {
+  outline: clamp(2px, 0.55cqw, 5px) solid rgba(255, 245, 200, 0.95);
+  outline-offset: clamp(-3px, -0.35cqw, -1px);
+  z-index: 3;
+}
+
+.calendar-cell--soil {
+  background-image: url('/images/calendar/tile-soil.png');
+}
+
+.calendar-cell--grass {
+  background-image: url('/images/calendar/tile-grass.png');
+}
+
+/* 잔디 타일 위에 완료 바구니 일러스트 겹침 */
+.calendar-cell--complete {
+  background-image: url('/images/calendar/tile-grass.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.calendar-cell--complete::after {
+  content: '';
+  position: absolute;
+  inset: clamp(6%, min(10cqw, 9cqh), 14%);
+  z-index: 0;
+  background-image: url('/images/calendar/tile-grapes-complete-overlay.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.calendar-cell--selected {
+  box-shadow:
+    inset max(1px, 0.22cqw) max(1px, 0.22cqw) 0 rgba(255, 255, 255, 0.28),
+    inset max(-1px, -0.22cqw) max(-1px, -0.22cqw) 0 rgba(0, 0, 0, 0.26),
+    clamp(1px, 0.35cqw, 4px) clamp(2px, 0.55cqw, 6px) clamp(4px, 1cqw, 10px) rgba(30, 22, 14, 0.38),
+    inset 0 0 0 clamp(2px, 0.55cqw, 5px) rgba(255, 210, 120, 0.95),
+    0 0 0 clamp(1px, 0.35cqw, 3px) rgba(120, 70, 160, 0.55);
+}
+
+.calendar-cell--selected:hover {
+  box-shadow:
+    inset max(1px, 0.22cqw) max(1px, 0.22cqw) 0 rgba(255, 255, 255, 0.34),
+    inset max(-1px, -0.22cqw) max(-1px, -0.22cqw) 0 rgba(0, 0, 0, 0.22),
+    clamp(2px, 0.45cqw, 5px) clamp(3px, 0.75cqw, 8px) clamp(6px, 1.4cqw, 12px) rgba(25, 18, 10, 0.45),
+    inset 0 0 0 clamp(2px, 0.55cqw, 5px) rgba(255, 210, 120, 0.95),
+    0 0 0 clamp(1px, 0.35cqw, 3px) rgba(120, 70, 160, 0.55);
+}
+
+.calendar-cell__day {
+  position: absolute;
+  z-index: 1;
+  top: clamp(6%, min(8cqh, 10%), 12%);
+  left: clamp(7%, min(10cqw, 12%), 14%);
+  font-size: clamp(0.38rem, min(34cqw, 15cqh), 1.2rem);
+  font-weight: 900;
+  line-height: 1;
+  color: #fffef6;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 10px rgba(0, 0, 0, 0.45),
+    1px 1px 0 rgba(45, 28, 12, 0.95);
+  pointer-events: none;
+}
+
+.calendar-cell__badge {
+  position: absolute;
+  z-index: 1;
+  bottom: clamp(5%, min(8cqh, 12%), 12%);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 85%;
+  padding: clamp(0.05rem, 1.2cqw, 0.14rem) clamp(0.1rem, 2.4cqw, 0.34rem);
+  border-radius: clamp(0.22rem, 2.2cqw, 0.42rem);
+  font-size: clamp(0.28rem, min(24cqw, 10cqh), 0.78rem);
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #3d1458;
+  background: rgba(255, 252, 245, 0.92);
+  border: 1px solid rgba(111, 63, 175, 0.28);
+  box-shadow: 0 clamp(1px, 0.25cqw, 3px) clamp(2px, 0.8cqw, 6px) rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+/* 주간 보기 — 한 줄 그리드 */
+.calendar-unified--week {
+  grid-template-rows: auto auto minmax(clamp(5.25rem, 26cqw, 13rem), 1fr);
+}
+
+.calendar-cell--week-row {
+  min-height: clamp(5.25rem, 26cqw, 13rem);
+}
+
+/* 보기 전환 (일간 / 주간 / 월간) */
+.calendar-view-switch {
+  display: inline-flex;
+  flex-wrap: wrap;
+  border-radius: clamp(0.45rem, 2cqw, 0.75rem);
+  border: 1px solid color-mix(in srgb, var(--color-brand-600, #6f3faf) 22%, transparent);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-farm-white, #ffffff) 92%, var(--color-brand-50, #e6d6fa));
+}
+
+.calendar-view-switch__btn {
+  margin: 0;
+  padding: clamp(0.26rem, 1.4cqw, 0.42rem) clamp(0.5rem, 2.2cqw, 0.85rem);
+  font-size: clamp(0.58rem, calc(0.28rem + 1.8cqw), 0.82rem);
+  font-weight: 800;
+  border: none;
+  background: transparent;
+  color: var(--color-brand-400, #9579c4);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.calendar-view-switch__btn:hover {
+  background: color-mix(in srgb, var(--color-brand-50, #e6d6fa) 55%, transparent);
+  color: var(--color-brand-600, #6f3faf);
+}
+
+.calendar-view-switch__btn.is-active {
+  background: var(--color-brand-600, #6f3faf);
+  color: var(--color-farm-white, #ffffff);
+}
+
+.calendar-view-switch__btn.is-active:hover {
+  background: var(--color-brand-700, #4f2480);
+  color: var(--color-farm-white, #ffffff);
+}
+
+.calendar-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(0.35rem, 2cqw, 0.65rem);
+}
+
+@media (max-width: 639px) {
+  .calendar-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* 일간 보기 — 하루 단위 단일 박스 배경 + 투명 스타일 DayPlanner */
+.calendar-board--day-wrap {
+  align-items: stretch;
+}
+
+.calendar-day-planner-wrap {
+  container-type: size;
+  container-name: calendar-day-panel;
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  flex: 1;
+  min-height: clamp(18rem, 46cqw, 30rem);
+  margin-bottom: clamp(1rem, 7cqw, 3.25rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+/** grass/soil 타일 배경 박스 — 내부에 플래너 레이어 포함 */
+.calendar-day-single-bg {
+  position: relative;
+  z-index: 0;
+  box-sizing: border-box;
+  width: min(82%, 30rem);
+  margin-top: 5rem;
+  margin-bottom: clamp(1rem, 4cqw, 2.25rem);
+  flex: 1;
+  min-height: clamp(14rem, 36cqw, 22rem);
+  display: flex;
+  flex-direction: column;
+  border-radius: clamp(0.55rem, 2.4cqw, 1rem);
+  overflow: hidden;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow:
+    inset max(1px, 0.22cqw) max(1px, 0.22cqw) 0 rgba(255, 255, 255, 0.28),
+    inset max(-1px, -0.22cqw) max(-1px, -0.22cqw) 0 rgba(0, 0, 0, 0.22),
+    clamp(1px, 0.35cqw, 4px) clamp(2px, 0.55cqw, 6px) clamp(5px, 1.1cqw, 11px) rgba(30, 22, 14, 0.28);
+}
+
+.calendar-day-single-bg--soil {
+  background-image: url('/images/calendar/tile-soil.png');
+}
+
+.calendar-day-single-bg--grass {
+  background-image: url('/images/calendar/tile-grass.png');
+}
+
+.calendar-day-single-bg--complete {
+  background-image: url('/images/calendar/tile-grass.png');
+}
+
+.calendar-day-single-bg--complete::after {
+  content: '';
+  position: absolute;
+  inset: clamp(8%, min(12cqw, 10cqh), 14%);
+  z-index: 0;
+  background-image: url('/images/calendar/tile-grapes-complete-overlay.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  /* 바구니 일러스트가 넓게 깔려 글자 대비를 해치지 않도록 살짝만 보이게 */
+  opacity: 0.45;
+}
+
+.calendar-day-planner-layer {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(0.35rem, 1.5cqw, 0.75rem);
+}
+
+/* 일간: 외부 grass/soil 박스 안에 플래너 카드가 꽉 맞고, 목록은 기본 높이·최대 높이 + 스크롤 */
+.day-planner-root--embedded {
+  align-self: stretch;
+  width: 100%;
+}
+
+.day-planner-card--embedded {
+  min-height: 0;
+}
+
+.day-planner-root--embedded .day-planner-scroll-area {
+  flex: 1 1 auto;
+  min-height: clamp(7.5rem, 17cqh, 10rem);
+  max-height: min(42cqh, 22rem);
+}
+
+.day-planner-root--embedded .day-planner-empty-area__inner {
+  min-height: clamp(8.5rem, 20cqh, 11.5rem);
+  padding-left: clamp(1rem, 3cqw, 1.5rem);
+  padding-right: clamp(1rem, 3cqw, 1.5rem);
+}
