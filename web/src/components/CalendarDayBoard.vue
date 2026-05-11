@@ -11,6 +11,7 @@
             transparent-variant
             @update:all-plans="$emit('update:allPlans', $event)"
             @request-plan-compose="$emit('request-plan-compose')"
+            @request-plan-edit="$emit('request-plan-edit', $event)"
           />
         </div>
       </div>
@@ -29,7 +30,7 @@ const props = defineProps({
   allPlans: { type: Object, default: () => ({}) }
 });
 
-defineEmits(['update:allPlans', 'request-plan-compose']);
+defineEmits(['update:allPlans', 'request-plan-compose', 'request-plan-edit']);
 
 const dayRef = computed(() => startOfDay(props.viewDate));
 

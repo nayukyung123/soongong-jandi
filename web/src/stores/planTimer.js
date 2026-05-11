@@ -121,9 +121,9 @@ export const usePlanTimerStore = defineStore('planTimer', () => {
     const list = plans.allPlans[key] || [];
     const id = selectedPlanId.value;
     const next = list.map((p) => {
-      if (p.id !== id) return p;
+      if (String(p.id) !== String(id)) return p;
       const prev = typeof p.executedSeconds === 'number' ? p.executedSeconds : 0;
-      return { ...p, executedSeconds: prev + seconds };
+      return { ...p, executedSeconds: prev + seconds, completed: true };
     });
     plans.allPlans = { ...plans.allPlans, [key]: next };
 

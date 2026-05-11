@@ -56,6 +56,7 @@
             list-only
             list-plan-read-only
             class="min-h-0 flex-1"
+            :focus-edit-plan-id="plannerFocusPlanId"
             @plan-timer-started="emit('close')"
           />
           <button
@@ -74,6 +75,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import DayPlanner from './DayPlanner.vue';
 import { useUiStore } from '../stores/ui.js';
 
@@ -86,6 +88,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'update:allPlans', 'update:currentDate']);
 
 const uiStore = useUiStore();
+const { plannerFocusPlanId } = storeToRefs(uiStore);
 
 const titleId = 'planner-modal-heading';
 

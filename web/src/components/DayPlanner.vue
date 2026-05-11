@@ -31,23 +31,6 @@
         {{ headingText }}
       </h3>
 
-      <!-- 일간 전용: 칸 클릭 → 계획 추가 모달 (목록은 아래에서 바로 확인) -->
-      <div v-if="embeddedComposeViaModal && transparentVariant && !composeOnly && !listOnly" class="mb-3 shrink-0">
-        <button
-          type="button"
-          :class="[
-            'w-full rounded-2xl border-2 border-dashed px-4 py-4 text-center text-sm font-black transition hover:scale-[1.01]',
-            embeddedSurface === 'soil'
-              ? 'border-white/55 bg-black/20 text-[#fffdf8] shadow-[0_2px_12px_rgba(0,0,0,0.25)] hover:bg-black/30'
-              : 'border-gray-300 bg-white/90 text-gray-900 shadow-sm hover:bg-white'
-          ]"
-          @click="emit('request-plan-compose')"
-        >
-          계획 추가하기
-          <span class="mt-1 block text-[11px] font-bold opacity-85">탭하면 새 계획 작성 창이 열려요</span>
-        </button>
-      </div>
-
       <!-- 계획 작성 (embedded·모달 전체) | compose-only 모달 전용 — 일간 + 모달 추가 시 상단 작성란 숨김 -->
       <div
         v-if="showTopComposeForm"
@@ -134,8 +117,9 @@
         <span>등록 {{ currentPlans.length }}개</span>
       </div>
 
-      <!-- 일간 embedded: 목록만 스크롤 -->
+      <!-- 일간 embedded: 목록 스크롤 + 하단 계획 추가 -->
       <template v-if="transparentVariant && !composeOnly && !listOnly">
+        <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           v-if="suppressPlanList"
           class="day-planner-suppress-hint flex min-h-[120px] shrink-0 flex-col justify-center"
@@ -160,7 +144,7 @@
           <div
             v-for="(plan, i) in currentPlans"
             :key="plan.id"
-            class="group space-y-2 rounded-2xl border-2 border-white/55 bg-transparent p-3 sm:p-4 transition hover:border-brand-200/90"
+            class="group space-y-2 rounded-2xl border-2 border-white/60 bg-white/90 p-3 shadow-sm transition hover:border-brand-200/90 sm:p-4"
           >
             <div class="flex w-full items-start gap-2 sm:gap-3">
               <span class="shrink-0 pt-1 text-lg" :class="embeddedPalette.grab">≡</span>
@@ -170,62 +154,86 @@
                     v-model="plan.title"
                     type="text"
                     placeholder="제목"
+                    :readonly="!isEmbeddedEditing(plan)"
                     :class="[
-                      'min-w-0 flex-1 rounded-xl border border-transparent bg-transparent px-2 py-1 text-sm font-black outline-none focus:border-brand-300/80',
-                      plan.completed ? embeddedPalette.planDone : embeddedPalette.planActive
+                      'min-w-0 flex-1 rounded-xl border px-2 py-1 text-sm font-black outline-none',
+                      isEmbeddedEditing(plan)
+                        ? 'border-transparent bg-transparent focus:border-brand-300/80'
+                        : 'cursor-default border-transparent bg-transparent',
+                      plan.completed ? 'text-gray-400 line-through' : 'text-gray-900'
                     ]"
                   />
-                  <div
-                    class="flex shrink-0 items-center gap-1 rounded-xl border border-white/50 bg-transparent px-3 py-1"
+                  <PlanEditToggleButton
+                    :editing="isEmbeddedEditing(plan)"
+                    @click="toggleEmbeddedEdit(plan)"
+                  />
+                </div>
+                <div
+                  class="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#EBE0FF] px-3 py-2.5"
+                >
+                  <template v-if="isEmbeddedEditing(plan)">
+                    <div class="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-[11px] font-black text-brand-900">
+                      <span class="shrink-0">실행 예정</span>
+                      <input
+                        v-model="plan.scheduleStart"
+                        type="time"
+                        class="rounded-lg border border-brand-200/80 bg-white px-2 py-1 text-xs font-black text-gray-900 outline-none focus:border-brand-400"
+                      />
+                      <span class="text-brand-400">~</span>
+                      <input
+                        v-model="plan.scheduleEnd"
+                        type="time"
+                        class="rounded-lg border border-brand-200/80 bg-white px-2 py-1 text-xs font-black text-gray-900 outline-none focus:border-brand-400"
+                      />
+                    </div>
+                  </template>
+                  <p
+                    v-else
+                    class="min-w-0 flex-1 text-[12px] font-black leading-snug text-brand-900"
                   >
-                    <input
-                      type="number"
-                      v-model.number="plan.minutes"
-                      min="0"
-                      max="480"
-                      step="10"
-                      :class="embeddedPalette.minuteNum"
-                      @click.stop
-                    />
-                    <span class="text-xs font-bold" :class="embeddedPalette.minuteSuffix">분</span>
+                    실행 예정 {{ plan.scheduleStart || '—' }} ~ {{ plan.scheduleEnd || '—' }}
+                  </p>
+                </div>
+                <div class="flex items-start gap-2">
+                  <textarea
+                    v-model="plan.detail"
+                    rows="3"
+                    placeholder="계획 내용"
+                    :readonly="!isEmbeddedEditing(plan)"
+                    :class="[
+                      'min-h-[4.5rem] min-w-0 flex-1 resize-y rounded-xl border px-3 py-2 text-xs font-bold outline-none',
+                      isEmbeddedEditing(plan)
+                        ? 'border-gray-200/90 bg-white text-gray-800 placeholder:text-gray-400 focus:border-brand-300'
+                        : 'cursor-default border-gray-100 bg-gray-50/90 text-gray-700 placeholder:text-gray-400'
+                    ]"
+                  />
+                  <div class="flex shrink-0 flex-col items-center justify-start pt-0.5">
+                    <span
+                      v-if="isPlanDateToday && plan.completed"
+                      class="timer-grape-done"
+                      aria-label="완료된 계획"
+                      title="완료된 계획"
+                    >
+                      <img src="/images/timer/plan-completed-grape.png" alt="" />
+                    </span>
+                    <button
+                      v-else-if="isPlanDateToday && showStartControl(plan)"
+                      type="button"
+                      class="timer-grape-btn"
+                      :disabled="timerBusy && activePlanId !== plan.id"
+                      aria-label="시작"
+                      @click="startTimerForPlan(plan.id)"
+                    >
+                      <img src="/images/timer/start.png" alt="" class="pointer-events-none" />
+                    </button>
                   </div>
                 </div>
-                <textarea
-                  v-model="plan.detail"
-                  rows="2"
-                  placeholder="계획 내용"
-                  :class="embeddedPalette.detailArea"
-                />
               </div>
               <div class="flex shrink-0 flex-col items-end gap-2 pt-0.5">
                 <button type="button" :class="embeddedPalette.deleteBtn" @click="removePlan(i)">
                   ✕
                 </button>
               </div>
-            </div>
-            <div class="flex items-center justify-between gap-2 pl-7 sm:pl-8">
-              <p :class="['min-w-0 flex-1 text-[10px] font-bold leading-snug', embeddedPalette.scheduleHint]">
-                실행 예정 {{ plan.scheduleStart || '—' }} ~ {{ plan.scheduleEnd || '—' }}
-                <span class="opacity-70">(추가 시 설정한 시간)</span>
-              </p>
-              <span
-                v-if="isPlanDateToday && plan.completed"
-                class="timer-grape-done shrink-0"
-                aria-label="완료된 계획"
-                title="완료된 계획"
-              >
-                <img src="/images/timer/plan-completed-grape.png" alt="" />
-              </span>
-              <button
-                v-else-if="isPlanDateToday && showStartControl(plan)"
-                type="button"
-                class="timer-grape-btn shrink-0"
-                :disabled="timerBusy && activePlanId !== plan.id"
-                aria-label="시작"
-                @click="startTimerForPlan(plan.id)"
-              >
-                <img src="/images/timer/start.png" alt="" class="pointer-events-none" />
-              </button>
             </div>
           </div>
         </div>
@@ -237,11 +245,25 @@
             <p class="text-sm font-bold" :class="embeddedPalette.emptyHint">
               {{
                 embeddedComposeViaModal
-                  ? '위 「계획 추가하기」칸을 눌러 새 계획을 추가해 보세요.'
+                  ? '아래 「계획 추가하기」를 눌러 새 계획을 추가해 보세요.'
                   : '위 입력란에 작성한 뒤 「계획 추가」를 눌러 주세요.'
               }}
             </p>
           </div>
+        </div>
+
+        <div
+          v-if="embeddedComposeViaModal"
+          class="shrink-0 border-t border-white/25 pt-3"
+        >
+          <button
+            type="button"
+            class="w-full rounded-2xl border-2 border-brand-500 bg-brand-600 px-4 py-3.5 text-center text-sm font-black text-white shadow-md transition hover:bg-brand-700 hover:brightness-[1.02]"
+            @click="emit('request-plan-compose')"
+          >
+            계획 추가하기
+          </button>
+        </div>
         </div>
       </template>
 
@@ -455,10 +477,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { storeToRefs } from 'pinia';
 import { usePlanTimerStore } from '../stores/planTimer.js';
 import { toDateKey } from '../composables/useCalendarPlanHelpers.js';
+import PlanEditToggleButton from './PlanEditToggleButton.vue';
 
 const props = defineProps({
   allPlans: { type: Object, required: true },
@@ -482,10 +505,18 @@ const props = defineProps({
   /** 플래너 큰 모달: 목록은 기본 조회만, 「수정」으로 행 단위 편집 */
   listPlanReadOnly: { type: Boolean, default: false },
   /** 일간 타일: 상단 인라인 작성란 대신 「계획 추가」모달로만 추가 */
-  embeddedComposeViaModal: { type: Boolean, default: false }
+  embeddedComposeViaModal: { type: Boolean, default: false },
+  /** 플래너 모달에서 해당 계획 행을 즉시 편집 모드로 */
+  focusEditPlanId: { type: [String, Number], default: null }
 });
 
-const emit = defineEmits(['update:allPlans', 'plan-added', 'plan-timer-started', 'request-plan-compose']);
+const emit = defineEmits([
+  'update:allPlans',
+  'plan-added',
+  'plan-timer-started',
+  'request-plan-compose',
+  'request-plan-edit'
+]);
 
 /** 상단 큰 작성 블록 표시 여부 */
 const showTopComposeForm = computed(
@@ -534,6 +565,9 @@ const newScheduleEnd = ref('10:00');
 const editingPlanId = ref(null);
 const editBackup = ref(null);
 
+/** 일간 embedded: 「수정」으로만 제목·내용·시간 입력 해제 */
+const embeddedEditingPlanId = ref(null);
+
 const dateKey = computed(() => {
   const d = props.currentDate;
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -547,7 +581,20 @@ const currentPlans = computed({
 watch(dateKey, () => {
   editingPlanId.value = null;
   editBackup.value = null;
+  embeddedEditingPlanId.value = null;
 });
+
+function isEmbeddedEditing(plan) {
+  return embeddedEditingPlanId.value === plan.id;
+}
+
+function toggleEmbeddedEdit(plan) {
+  if (embeddedEditingPlanId.value === plan.id) {
+    embeddedEditingPlanId.value = null;
+  } else {
+    embeddedEditingPlanId.value = plan.id;
+  }
+}
 
 function snapshotPlan(plan) {
   return {
@@ -585,6 +632,17 @@ function finishEditPlan() {
   editBackup.value = null;
 }
 
+watch(
+  () => props.focusEditPlanId,
+  (id) => {
+    if (!props.listPlanReadOnly || id == null) return;
+    nextTick(() => {
+      const plan = currentPlans.value.find((p) => String(p.id) === String(id));
+      if (plan) startEditPlan(plan);
+    });
+  }
+);
+
 const addPlan = () => {
   if (!newTitle.value.trim()) return;
   currentPlans.value = [
@@ -617,6 +675,9 @@ const removePlan = (i) => {
   if (removed && editingPlanId.value === removed.id) {
     editingPlanId.value = null;
     editBackup.value = null;
+  }
+  if (removed && embeddedEditingPlanId.value === removed.id) {
+    embeddedEditingPlanId.value = null;
   }
 };
 
