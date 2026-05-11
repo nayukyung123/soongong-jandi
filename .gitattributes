@@ -1,0 +1,22 @@
+# 모든 텍스트 파일은 LF로 정규화
+* text=auto eol=lf
+
+# 셸/리눅스 실행 파일은 무조건 LF (CRLF 절대 금지)
+*.sh        text eol=lf
+gradlew     text eol=lf
+Dockerfile  text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.conf      text eol=lf
+
+# Windows 전용은 CRLF
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+gradlew.bat text eol=crlf
+
+# 바이너리는 변환 금지
+*.jar       binary
+*.png       binary
+*.jpg       binary
+*.ico       binary
+*.pdf       binary
