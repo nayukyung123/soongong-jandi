@@ -33,7 +33,7 @@ public class User {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 1)
+    @Column(columnDefinition = "varchar(1)")
     private Gender gender;
 
     @Column(length = 20)
