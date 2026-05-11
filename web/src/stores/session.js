@@ -18,6 +18,7 @@ export const useSessionStore = defineStore('session', () => {
 
   function endStudy(result) {
     sessionResult.value = result;
+    sessionMemo.value = '';
     isStudying.value = false;
     showEndModal.value = true;
   }
@@ -29,7 +30,7 @@ export const useSessionStore = defineStore('session', () => {
       date: plans.dateKey,
       elapsed: sessionResult.value.elapsed,
       absence: sessionResult.value.absenceTime,
-      grapes: sessionResult.value.completedGrapes,
+      grapes: 0, // 추후 기록·성과 기반 지급 (UI에서 별도 안내)
       memo: sessionMemo.value,
       savedAt: new Date().toISOString(),
     });

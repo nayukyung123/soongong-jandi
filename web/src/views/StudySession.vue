@@ -298,11 +298,10 @@ const completeCurrentTask = () => {
 const stopSession = () => {
   stopTimer();
   emit('session-end', {
-    elapsed:         elapsed.value,
-    accumulated:     accumulated.value,
-    absenceTime:     absenceTime.value,
-    absenceCount:    absenceCount.value,
-    completedGrapes: completedGrapes.value
+    elapsed: elapsed.value,
+    accumulated: accumulated.value,
+    absenceTime: absenceTime.value,
+    absenceCount: absenceCount.value
   });
 };
 
