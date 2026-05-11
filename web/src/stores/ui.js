@@ -6,6 +6,8 @@ export const useUiStore = defineStore('ui', () => {
   /** 메인은 달력(calendar) */
   const currentPage = ref('calendar');
   const plannerModalOpen = ref(false);
+  /** 플래너 모달 오픈 시 해당 plan 행을 바로 편집 모드로 (일간 「수정」) */
+  const plannerFocusPlanId = ref(null);
   /** 새 계획 추가만 하는 소형 모달 */
   const planComposeOpen = ref(false);
   /** 플로팅 타이머 클릭 시: 현재 계획 상세 */
@@ -16,14 +18,18 @@ export const useUiStore = defineStore('ui', () => {
     if (!session.isStudying) currentPage.value = page;
   }
 
-  function openPlannerModal() {
+  function openPlannerModal(planId = null) {
     const session = useSessionStore();
-    if (!session.isStudying) plannerModalOpen.value = true;
+    if (!session.isStudying) {
+      plannerFocusPlanId.value = planId ?? null;
+      plannerModalOpen.value = true;
+    }
   }
 
   function closePlannerModal() {
     plannerModalOpen.value = false;
     planComposeOpen.value = false;
+    plannerFocusPlanId.value = null;
   }
 
   function openPlanCompose() {
@@ -49,6 +55,7 @@ export const useUiStore = defineStore('ui', () => {
   return {
     currentPage,
     plannerModalOpen,
+    plannerFocusPlanId,
     planComposeOpen,
     planTimerDetailOpen,
     setPage,
