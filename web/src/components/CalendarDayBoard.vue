@@ -7,8 +7,11 @@
             :all-plans="allPlans"
             :current-date="dayRef"
             :embedded-surface="embeddedSurface"
+            embedded-compose-via-modal
             transparent-variant
             @update:all-plans="$emit('update:allPlans', $event)"
+            @request-plan-compose="$emit('request-plan-compose')"
+            @request-plan-edit="$emit('request-plan-edit', $event)"
           />
         </div>
       </div>
@@ -27,7 +30,7 @@ const props = defineProps({
   allPlans: { type: Object, default: () => ({}) }
 });
 
-defineEmits(['update:allPlans']);
+defineEmits(['update:allPlans', 'request-plan-compose', 'request-plan-edit']);
 
 const dayRef = computed(() => startOfDay(props.viewDate));
 

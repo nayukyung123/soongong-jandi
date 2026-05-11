@@ -60,6 +60,8 @@
       :view-date="viewDate"
       :all-plans="allPlans"
       @update:all-plans="$emit('update:allPlans', $event)"
+      @request-plan-compose="onDayViewOpenCompose"
+      @request-plan-edit="onDayRequestPlanEdit"
     />
     <CalendarWeekBoard
       v-else-if="viewMode === 'week'"
@@ -90,7 +92,24 @@ import { startOfDay, startOfWeekSunday } from '../composables/useCalendarPlanHel
 import '../styles/calendar.css';
 
 const props = defineProps(['allPlans', 'selectedDate']);
-const emit = defineEmits(['update:selectedDate', 'update:allPlans', 'open-planner']);
+const emit = defineEmits([
+  'update:selectedDate',
+  'update:allPlans',
+  'open-planner',
+  'request-plan-compose',
+  'request-plan-edit'
+]);
+
+function onDayViewOpenCompose() {
+  emit('update:selectedDate', viewDate.value);
+  emit('request-plan-compose');
+}
+
+/** 일간 「수정」→ 플래너 모달 날짜가 현재 일간과 일치하도록 */
+function onDayRequestPlanEdit(planId) {
+  emit('update:selectedDate', viewDate.value);
+  emit('request-plan-edit', planId);
+}
 
 /** @type {import('vue').Ref<'day' | 'week' | 'month'>} */
 const viewMode = ref('month');
@@ -133,6 +152,9 @@ function shiftPeriod(delta) {
     d.setDate(d.getDate() + delta);
   }
   viewDate.value = startOfDay(d);
+  if (viewMode.value === 'day') {
+    emit('update:selectedDate', viewDate.value);
+  }
 }
 
 const navPrevLabel = computed(() => {

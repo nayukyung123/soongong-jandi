@@ -419,7 +419,7 @@
   position: relative;
   z-index: 0;
   box-sizing: border-box;
-  width: min(82%, 30rem);
+  width: min(96%, 44rem);
   margin-top: 5rem;
   margin-bottom: clamp(1rem, 4cqw, 2.25rem);
   flex: 1;
