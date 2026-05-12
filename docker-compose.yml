@@ -10,6 +10,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # 위에 코드 대신 아래 코드 쓰면 루트 폴더에 DB가 생긴다. 좋은 방법은 아니지만 개발 편의성을 위해 작성
+      # - ./local-db-data:/var/lib/postgresql/data 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-soongongjandi}"]
       interval: 5s
@@ -31,6 +33,36 @@ services:
       retries: 5
     restart: unless-stopped
 
+  mlflow:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile.mlflow
+    container_name: jandi-mlflow
+    depends_on:
+      postgres: # MLflow가 PostgreSQL이 준비될 때까지 기다리도록 설정
+        condition: service_healthy 
+    ports:
+      - "5000:5000" # MLflow UI 포트
+      - "5002:5002" # REST API 접근 포트
+    environment:
+      MLFLOW_BACKEND_STORE_URI: postgresql://${DB_USER:-soongongjandi}:${DB_PASSWORD:-changeme}@postgres:5432/mlflow
+      MLFLOW_ARTIFACT_ROOT: /mlflow/artifacts
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - mlflow_artifacts:/mlflow/artifacts
+      - ./scripts/init-db:/docker-entrypoint-initdb.d
+    # 아래 커멘드 한줄로 써야함 여러 줄로 쓰면 줄바꿈이 공백으로 처리되어서 에러 발생함
+    command: bash -c "psql postgresql://${DB_USER:-soongongjandi}:${DB_PASSWORD:-changeme}@postgres:5432/${DB_NAME:-soongongjandi} -c 'CREATE DATABASE mlflow' || true && mlflow server --backend-store-uri postgresql://${DB_USER:-soongongjandi}:${DB_PASSWORD:-changeme}@postgres:5432/mlflow --artifacts-destination /mlflow/artifacts --host 0.0.0.0 --port 5000"
+    # 아래는 Mlflow 모델을 서빙하기 위해 서버를 작동하는 명령어 하지만 지금은 서빙하는 모델이 없음으로 주석 처리함.
+    # command: mlflow models serve -m "models:/iris-classifier/1" -h 0.0.0.0 -p 5002 --no-conda --env-manager local
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:
+  mlflow_artifacts:
