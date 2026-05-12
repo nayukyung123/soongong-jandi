@@ -27,7 +27,11 @@ export function getPlansForDate(allPlans, date) {
 }
 
 /**
- * soil | grass | complete — CalendarBoard와 동일 규칙
+ * soil | sprout | grass | complete — 달력 타일·일간 배경 공통
+ * - soil: 계획 없음(또는 미래 날짜)
+ * - sprout: 계획 있음·아직 미완료만
+ * - grass: 계획 있음·일부 완료
+ * - complete: 모두 완료
  */
 export function tileVariantForDate(allPlans, cellDate) {
   const plans = getPlansForDate(allPlans, cellDate);
@@ -39,8 +43,10 @@ export function tileVariantForDate(allPlans, cellDate) {
 
   if (!hasPlans || isFutureDay) return 'soil';
 
+  const anyCompleted = plans.some((p) => Boolean(p.completed));
   const allCompleted = plans.every((p) => Boolean(p.completed));
   if (allCompleted) return 'complete';
+  if (!anyCompleted) return 'sprout';
 
   return 'grass';
 }

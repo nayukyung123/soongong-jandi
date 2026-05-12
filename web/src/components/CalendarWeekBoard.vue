@@ -69,6 +69,7 @@ function cellClasses(offset) {
   const v = tileVariantForDate(props.allPlans, cellDate);
   return {
     'calendar-cell--soil': v === 'soil',
+    'calendar-cell--sprout': v === 'sprout',
     'calendar-cell--grass': v === 'grass',
     'calendar-cell--complete': v === 'complete',
     'calendar-cell--selected': isSameDay(cellDate)
