@@ -1,8 +1,8 @@
 <template>
-  <div class="flex h-screen w-full bg-app-canvas overflow-hidden font-sans text-app-ink">
+  <div class="flex h-screen min-h-0 w-full overflow-visible bg-app-canvas font-sans text-app-ink">
     <Sidebar :active-page="currentPage" @change-page="uiStore.setPage" />
 
-    <main class="relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-visible min-w-0">
+    <main class="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-auto">
       <StudySession
         v-if="isStudying"
         v-model:all-plans="plansStore.allPlans"

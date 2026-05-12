@@ -8,8 +8,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  overflow-y: visible;
+  overflow: visible;
   padding: clamp(0.45rem, 2.4cqw, 1rem) clamp(0.55rem, 3.2cqw, 1.25rem) clamp(0.45rem, 2.5cqw, 0.95rem);
   background-color: var(--color-brand-50, #e6d6fa);
   background-image: linear-gradient(
@@ -17,6 +16,12 @@
     var(--color-brand-50, #e6d6fa) 0%,
     var(--color-farm-cream, #f8f3e9) 100%
   );
+}
+
+.calendar-board:has(.calendar-unified--month),
+.calendar-board:has(.calendar-board--day-wrap) {
+  overflow: visible;
+  padding-inline: clamp(0.85rem, 5.5cqw, 3.25rem);
 }
 
 .calendar-header {
@@ -115,6 +120,10 @@
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   grid-template-rows: auto auto repeat(var(--calendar-rows, 6), minmax(0, 1fr));
+  overflow: visible;
+}
+
+.calendar-unified--month {
   overflow: visible;
 }
 
@@ -250,28 +259,23 @@
   background-image: url('/images/calendar/tile-soil.png');
 }
 
-.calendar-cell--grass {
-  background-image: url('/images/calendar/tile-grass.png');
-}
-
-/* 잔디 타일 위에 완료 바구니 일러스트 겹침 */
-.calendar-cell--complete {
-  background-image: url('/images/calendar/tile-grass.png');
+.calendar-cell--sprout {
+  background-image: url('/images/calendar/tile-sprout-soil.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
-.calendar-cell--complete::after {
-  content: '';
-  position: absolute;
-  inset: clamp(6%, min(10cqw, 9cqh), 14%);
-  z-index: 0;
-  background-image: url('/images/calendar/tile-grapes-complete-overlay.png');
-  background-size: contain;
+.calendar-cell--grass {
+  background-image: url('/images/calendar/tile-grass.png');
+}
+
+/* 모두 완료 — 꽃 만개 일러스트 단일 레이어 */
+.calendar-cell--complete {
+  background-image: url('/images/calendar/tile-garden-bloom.png');
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  pointer-events: none;
 }
 
 .calendar-cell--selected {
@@ -290,6 +294,154 @@
     clamp(2px, 0.45cqw, 5px) clamp(3px, 0.75cqw, 8px) clamp(6px, 1.4cqw, 12px) rgba(25, 18, 10, 0.45),
     inset 0 0 0 clamp(2px, 0.55cqw, 5px) rgba(255, 210, 120, 0.95),
     0 0 0 clamp(1px, 0.35cqw, 3px) rgba(120, 70, 160, 0.55);
+}
+
+/*
+ * 월간·주간: 칸의 background는 border-box에 clip → 타일이 직사각형으로 잘림.
+ * 더 큰 ::before + contain으로 전체 타일이 보이게 함.
+ */
+.calendar-unified--month > .calendar-cell,
+.calendar-unified--week > .calendar-cell {
+  background-image: none;
+  background-size: unset;
+  background-position: unset;
+  background-repeat: unset;
+  overflow: visible;
+  isolation: auto;
+  transform-origin: center center;
+}
+
+.calendar-unified--month > .calendar-cell {
+  border-radius: 0;
+  box-shadow: none;
+  filter: none;
+  transition:
+    transform 0.35s cubic-bezier(0.33, 1.15, 0.48, 1),
+    filter 0.3s ease,
+    z-index 0s;
+}
+
+.calendar-unified--month > .calendar-cell::before,
+.calendar-unified--week > .calendar-cell::before {
+  content: '';
+  position: absolute;
+  inset: -5%;
+  z-index: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  pointer-events: none;
+  transition: inset 0.38s cubic-bezier(0.33, 1.15, 0.48, 1);
+}
+
+.calendar-unified--week > .calendar-cell::before {
+  border-radius: inherit;
+}
+
+.calendar-unified--month > .calendar-cell--soil::before,
+.calendar-unified--week > .calendar-cell--soil::before {
+  background-image: url('/images/calendar/tile-soil.png');
+}
+
+.calendar-unified--month > .calendar-cell--sprout::before,
+.calendar-unified--week > .calendar-cell--sprout::before {
+  background-image: url('/images/calendar/tile-sprout-soil.png');
+}
+
+.calendar-unified--month > .calendar-cell--grass::before,
+.calendar-unified--week > .calendar-cell--grass::before {
+  background-image: url('/images/calendar/tile-grass.png');
+}
+
+.calendar-unified--month > .calendar-cell--complete::before,
+.calendar-unified--week > .calendar-cell--complete::before {
+  background-image: url('/images/calendar/tile-garden-bloom.png');
+}
+
+.calendar-unified--month > .calendar-cell:hover {
+  z-index: 12;
+  transform: scale(1.06) translateY(-4px);
+  filter: brightness(1.07) saturate(1.06);
+  box-shadow: none;
+}
+
+.calendar-unified--month > .calendar-cell:hover::before {
+  inset: -9%;
+}
+
+.calendar-unified--week > .calendar-cell:hover::before {
+  inset: -7%;
+}
+
+.calendar-unified--month > .calendar-cell:focus-visible {
+  outline: 2px solid rgba(111, 63, 175, 0.55);
+  outline-offset: 1px;
+  z-index: 14;
+}
+
+.calendar-unified--month > .calendar-cell--selected {
+  box-shadow: none;
+  outline: 2px solid rgba(255, 200, 90, 0.95);
+  outline-offset: -1px;
+  z-index: 4;
+}
+
+.calendar-unified--month > .calendar-cell--selected:hover {
+  box-shadow: none;
+  z-index: 14;
+  transform: scale(1.06) translateY(-4px);
+  filter: brightness(1.07) saturate(1.06);
+}
+
+.calendar-unified--month > .calendar-cell--selected:hover::before {
+  inset: -9%;
+}
+
+.calendar-unified--month > .calendar-cell .calendar-cell__day {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+  transition: transform 0.35s cubic-bezier(0.33, 1.15, 0.48, 1);
+}
+
+.calendar-unified--month > .calendar-cell:hover .calendar-cell__day,
+.calendar-unified--month > .calendar-cell--selected:hover .calendar-cell__day {
+  transform: translateY(-0.12em);
+}
+
+.calendar-unified--month > .calendar-cell .calendar-cell__badge {
+  border: none;
+  box-shadow: none;
+  background: rgba(255, 252, 245, 0.88);
+  transition: transform 0.35s cubic-bezier(0.33, 1.15, 0.48, 1);
+}
+
+.calendar-unified--month > .calendar-cell:hover .calendar-cell__badge,
+.calendar-unified--month > .calendar-cell--selected:hover .calendar-cell__badge {
+  transform: translateX(-50%) translateY(-3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-unified--month > .calendar-cell,
+  .calendar-unified--month > .calendar-cell:hover,
+  .calendar-unified--month > .calendar-cell .calendar-cell__day,
+  .calendar-unified--month > .calendar-cell .calendar-cell__badge,
+  .calendar-unified--week > .calendar-cell,
+  .calendar-unified--week > .calendar-cell:hover {
+    transition: none;
+  }
+
+  .calendar-unified--month > .calendar-cell:hover,
+  .calendar-unified--month > .calendar-cell--selected:hover {
+    transform: none;
+  }
+
+  .calendar-unified--month > .calendar-cell::before,
+  .calendar-unified--month > .calendar-cell:hover::before,
+  .calendar-unified--month > .calendar-cell--selected:hover::before,
+  .calendar-unified--week > .calendar-cell::before,
+  .calendar-unified--week > .calendar-cell:hover::before {
+    transition: none;
+    inset: -5%;
+  }
 }
 
 .calendar-cell__day {
@@ -412,9 +564,10 @@
   align-items: center;
   justify-content: flex-start;
   min-width: 0;
+  overflow: visible;
 }
 
-/** grass/soil 타일 배경 박스 — 내부에 플래너 레이어 포함 */
+/** 일간 배경 박스 (soil / sprout / grass / complete) — 내부에 플래너 레이어 포함 */
 .calendar-day-single-bg {
   position: relative;
   z-index: 0;
@@ -427,40 +580,41 @@
   display: flex;
   flex-direction: column;
   border-radius: clamp(0.55rem, 2.4cqw, 1rem);
-  overflow: hidden;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
+  overflow: visible;
+  background-image: none;
+  background-size: unset;
   box-shadow:
     inset max(1px, 0.22cqw) max(1px, 0.22cqw) 0 rgba(255, 255, 255, 0.28),
     inset max(-1px, -0.22cqw) max(-1px, -0.22cqw) 0 rgba(0, 0, 0, 0.22),
     clamp(1px, 0.35cqw, 4px) clamp(2px, 0.55cqw, 6px) clamp(5px, 1.1cqw, 11px) rgba(30, 22, 14, 0.28);
 }
 
-.calendar-day-single-bg--soil {
+.calendar-day-single-bg::before {
+  content: '';
+  position: absolute;
+  inset: -2%;
+  z-index: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.calendar-day-single-bg--soil::before {
   background-image: url('/images/calendar/tile-soil.png');
 }
 
-.calendar-day-single-bg--grass {
+.calendar-day-single-bg--sprout::before {
+  background-image: url('/images/calendar/tile-sprout-soil.png');
+}
+
+.calendar-day-single-bg--grass::before {
   background-image: url('/images/calendar/tile-grass.png');
 }
 
-.calendar-day-single-bg--complete {
-  background-image: url('/images/calendar/tile-grass.png');
-}
-
-.calendar-day-single-bg--complete::after {
-  content: '';
-  position: absolute;
-  inset: clamp(8%, min(12cqw, 10cqh), 14%);
-  z-index: 0;
-  background-image: url('/images/calendar/tile-grapes-complete-overlay.png');
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  pointer-events: none;
-  /* 바구니 일러스트가 넓게 깔려 글자 대비를 해치지 않도록 살짝만 보이게 */
-  opacity: 0.45;
+.calendar-day-single-bg--complete::before {
+  background-image: url('/images/calendar/tile-garden-bloom.png');
 }
 
 .calendar-day-planner-layer {
@@ -472,6 +626,9 @@
   display: flex;
   flex-direction: column;
   padding: clamp(0.35rem, 1.5cqw, 0.75rem);
+  border-radius: inherit;
+  overflow-x: visible;
+  overflow-y: auto;
 }
 
 /* 일간: 외부 grass/soil 박스 안에 플래너 카드가 꽉 맞고, 목록은 기본 높이·최대 높이 + 스크롤 */

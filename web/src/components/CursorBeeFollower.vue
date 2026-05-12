@@ -1,7 +1,7 @@
 <template>
   <div
     v-show="visible"
-    class="pointer-events-none fixed left-0 top-0 z-[10050] select-none"
+    class="pointer-events-none fixed left-0 top-0 z-[10300] select-none"
     :style="wrapperStyle"
     aria-hidden="true"
   >

@@ -4,7 +4,7 @@
       composeOnly
         ? 'day-planner-root--compose flex flex-col overflow-hidden bg-transparent'
         : transparentVariant
-          ? 'day-planner-root--embedded flex h-full max-h-full min-h-0 flex-col overflow-hidden bg-transparent p-3 sm:p-4 md:p-5'
+          ? 'day-planner-root--embedded flex h-full max-h-full min-h-0 flex-col overflow-x-visible overflow-y-hidden bg-transparent p-3 sm:p-4 md:p-5'
           : listOnly
           ? 'day-planner-root--modal day-planner-root--list-only flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-app-canvas p-4 md:p-6'
           : 'day-planner-root--modal flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-app-canvas p-6 md:p-8'
@@ -15,7 +15,7 @@
         composeOnly
           ? 'flex flex-col overflow-hidden rounded-2xl bg-transparent'
           : transparentVariant
-            ? 'day-planner-card--embedded flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-white/45 bg-transparent p-4 md:p-6'
+            ? 'day-planner-card--embedded flex min-h-0 flex-1 flex-col overflow-x-visible overflow-y-hidden rounded-3xl border border-white/45 bg-transparent p-4 md:p-6'
             : listOnly
               ? 'day-planner-card--modal flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white p-4 shadow-sm md:p-6'
               : 'day-planner-card--modal flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white p-6 shadow-sm md:p-8'
@@ -119,7 +119,7 @@
 
       <!-- 일간 embedded: 목록 스크롤 + 하단 계획 추가 -->
       <template v-if="transparentVariant && !composeOnly && !listOnly">
-        <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div class="flex min-h-0 flex-1 flex-col overflow-x-visible overflow-y-hidden">
         <div
           v-if="suppressPlanList"
           class="day-planner-suppress-hint flex min-h-[120px] shrink-0 flex-col justify-center"
@@ -494,11 +494,11 @@ const props = defineProps({
   composeOnly: { type: Boolean, default: false },
   /** PlanComposeModal 등에서 바깥 제목과 겹치지 않게 내부 큰 제목 숨김 */
   hideHeading: { type: Boolean, default: false },
-  /** 일간 배경 타일 종류 — 글자 대비용 (soil | grass | complete) */
+  /** 일간 배경 타일 종류 — 글자 대비용 (soil | sprout | grass | complete) */
   embeddedSurface: {
     type: String,
     default: null,
-    validator: (v) => v == null || ['soil', 'grass', 'complete'].includes(v)
+    validator: (v) => v == null || ['soil', 'sprout', 'grass', 'complete'].includes(v)
   },
   /** 일간 타일 등: 목록 카드 대신 안내만 표시(목록은 계획 모달에서만) */
   suppressPlanList: { type: Boolean, default: false },
@@ -717,7 +717,7 @@ const embeddedPalette = computed(() => {
 
   const s = props.embeddedSurface ?? 'grass';
 
-  if (s === 'soil') {
+  if (s === 'soil' || s === 'sprout') {
     return {
       heading: `text-[#fff9f0] ${soilShadow}`,
       planActive: `flex-1 text-[#fffdf8] ${soilSoft}`,

@@ -41,6 +41,7 @@ const dayBgClass = computed(() => {
   const v = embeddedSurface.value;
   return {
     'calendar-day-single-bg--soil': v === 'soil',
+    'calendar-day-single-bg--sprout': v === 'sprout',
     'calendar-day-single-bg--grass': v === 'grass',
     'calendar-day-single-bg--complete': v === 'complete'
   };

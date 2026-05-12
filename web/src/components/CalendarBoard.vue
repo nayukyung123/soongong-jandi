@@ -1,7 +1,7 @@
 <template>
   <div class="calendar-board">
     <div
-      class="calendar-unified"
+      class="calendar-unified calendar-unified--month"
       :style="{ '--calendar-rows': calendarRowCount }"
     >
       <div
@@ -86,6 +86,7 @@ function cellClasses(date) {
   const v = tileVariant(date);
   return {
     'calendar-cell--soil': v === 'soil',
+    'calendar-cell--sprout': v === 'sprout',
     'calendar-cell--grass': v === 'grass',
     'calendar-cell--complete': v === 'complete',
     'calendar-cell--selected': isSameDay(date)
