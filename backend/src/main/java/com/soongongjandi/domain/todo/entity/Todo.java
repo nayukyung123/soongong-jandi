@@ -1,6 +1,6 @@
 package com.soongongjandi.domain.todo.entity;
 
-import com.soongongjandi.domain.user.entity.User;
+import com.soongongjandi.domain.member.entity.Member;
 import com.soongongjandi.global.common.entity.BaseEntity;
 
 import jakarta.persistence.*;
@@ -29,8 +29,8 @@ public class Todo extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
     @Column(nullable = false)
     private String title;
@@ -56,9 +56,9 @@ public class Todo extends BaseEntity {
     /**
      * 정적 팩토리 메서드
      */
-    public static Todo create(User user, String title, int orderNum, LocalDate todoDate) {
+    public static Todo create(Member member, String title, int orderNum, LocalDate todoDate) {
         return Todo.builder()
-                .user(user)
+                .member(member)
                 .title(title)
                 .displayOrder(orderNum)
                 .todoDate(todoDate)
