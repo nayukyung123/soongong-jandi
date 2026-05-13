@@ -17,7 +17,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: validate          # 스키마는 Flyway가 단독 관리
+      ddl-auto: validate        # 스키마는 Flyway가 단독 관리, JPA는 일치 검증만
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
