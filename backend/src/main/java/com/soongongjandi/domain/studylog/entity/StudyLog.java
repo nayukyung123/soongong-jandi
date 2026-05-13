@@ -1,12 +1,8 @@
 package com.soongongjandi.domain.studylog.entity;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-import org.hibernate.annotations.SQLRestriction;
-
 import com.soongongjandi.domain.todo.entity.Todo;
-import com.soongongjandi.global.common.entity.BaseEntity;
 import com.soongongjandi.global.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -16,8 +12,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.SequenceGenerator;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,11 +25,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@SQLRestriction("deleted_at IS NULL")
 public class StudyLog extends BaseTimeEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "study_log_seq")
+	@SequenceGenerator(name = "study_log_seq", sequenceName = "study_log_seq", allocationSize = 50)
 	@Column(name = "study_log_id")
 	private Long id;
 
