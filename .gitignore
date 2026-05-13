@@ -588,6 +588,9 @@ logs/
 # Claude Code worktrees
 .claude/
 
+# AI 작업 산출물 (spec, plan 등)
+docs/superpowers/
+
 # App-internal server local state
 /app/server/.env
 /app/server/logs/
