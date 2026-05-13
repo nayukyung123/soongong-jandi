@@ -1,6 +1,8 @@
 package com.soongongjandi.domain.todo.entity;
 
 import com.soongongjandi.domain.user.entity.User;
+import com.soongongjandi.global.common.entity.BaseEntity;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -8,18 +10,19 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
-@Table(name = "todos", indexes = {
-    @Index(name = "ix_todos_user_date", columnList = "user_id, date"),
-    @Index(name = "ix_todos_user_date_order", columnList = "user_id, date, order_num")
-})
+// @Table(name = "todos", indexes = {
+//     @Index(name = "ix_todos_user_date", columnList = "user_id, date"),
+//     @Index(name = "ix_todos_user_date_order", columnList = "user_id, date, order_num")
+// })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @SQLRestriction("deleted_at IS NULL")
-public class Todo {
+public class Todo extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,50 +35,34 @@ public class Todo {
     @Column(nullable = false)
     private String title;
 
-    @Builder.Default
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
-    private TodoStatus status = TodoStatus.TODO;
-
-    @Column(name = "order_num", nullable = false)
-    private int orderNum;
+    // TODO: 3NF에 의해 일단은 삭제. 추후에 역정규화 때 추가 고려
+    // @Builder.Default
+    // @Enumerated(EnumType.STRING)
+    // @Column(length = 20, nullable = false)
+    // private TodoStatus status = TodoStatus.TODO;
 
     @Column(nullable = false)
-    private LocalDate date;
+    private int displayOrder;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(nullable = false)
+    private LocalDate todoDate;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    @Column(nullable = false)
+    private LocalTime startAt;
 
-    public static Todo create(User user, String title, int orderNum, LocalDate date) {
+    @Column(nullable = false)
+    private LocalTime endAt;
+
+    /**
+     * 정적 팩토리 메서드
+     */
+    public static Todo create(User user, String title, int orderNum, LocalDate todoDate) {
         return Todo.builder()
                 .user(user)
                 .title(title)
-                .orderNum(orderNum)
-                .date(date)
+                .displayOrder(orderNum)
+                .todoDate(todoDate)
                 .build();
     }
 
-    public void markDone() {
-        this.status = TodoStatus.DONE;
-    }
-
-    public void markTodo() {
-        this.status = TodoStatus.TODO;
-    }
-
-    public void updateTitle(String title) {
-        this.title = title;
-    }
-
-    public void updateOrder(int orderNum) {
-        this.orderNum = orderNum;
-    }
-
-    public void softDelete() {
-        this.deletedAt = LocalDateTime.now();
-    }
 }
