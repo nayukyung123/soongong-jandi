@@ -8,6 +8,7 @@
         v-model:all-plans="plansStore.allPlans"
         :current-date="plansStore.selectedDate"
         :start-task-index="studyStartIndex"
+        :camera-stream="cameraStream"
         @session-end="sessionStore.endStudy"
       />
 
@@ -157,11 +158,33 @@
     <FloatingPlanTimer v-if="planTimerVisible && !isStudying" />
 
     <CursorBeeFollower v-if="!isStudying && !showEndModal && !showGrapeRewardModal" />
+
+
+
+  <!-- feature/fe/camera_perpission -->
+  <button
+    type="button"
+    class="fixed bottom-4 right-4 z-50 rounded-2xl bg-brand-600 px-4 py-2 text-sm font-black text-white shadow-lg"
+    @click="showCameraModal = true"
+  >
+    📷 카메라 모달 테스트
+  </button>
+
+
+
+  <CameraPermissionModal
+    :show="showCameraModal"
+    @allow="showCameraModal"
+    @later="showCameraModal = false"
+  />
+  <!-- 여기까지가 추가된 파일 -->
+
   </div>
 </template>
 
 <script setup>
-import { computed, watch } from 'vue';
+// ref 임시 추가
+import { computed, watch, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import Sidebar from './components/Sidebar.vue';
 import PlannerModal from './components/PlannerModal.vue';
@@ -177,6 +200,9 @@ import { useUiStore } from './stores/ui';
 import { useSessionStore } from './stores/session';
 import { usePlanTimerStore } from './stores/planTimer';
 import { formatSecondsShort } from './utils/formatSession';
+
+// 임시 CameraPermissionModal
+import CameraPermissionModal from './components/CameraPermissionModal.vue';
 
 const plansStore = usePlansStore();
 const uiStore = useUiStore();
@@ -209,4 +235,16 @@ watch(planTimerStatus, (s) => {
 });
 
 const planTimerVisible = computed(() => planTimerStatus.value !== 'idle');
+
+// 임시 추가된 showCameraModal
+const showCameraModal = ref(false);
+
+const cameraStream = ref(null);
+
+function onCameraAllow(stream) {
+  cameraStream.value = stream;
+  showCameraModal.value = false;
+}
+
+
 </script>

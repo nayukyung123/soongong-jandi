@@ -83,19 +83,28 @@
       <div class="flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
 
         <!-- 📷 카메라 스냅샷 영역 (백엔드 연결 전 placeholder) -->
-        <div class="rounded-2xl bg-stem overflow-hidden shadow-sm shrink-0 relative">
-          <div class="flex h-36 w-full flex-col items-center justify-center gap-2">
-            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-stem-light/35">
-              <span class="text-xl">📷</span>
+          <div class="rounded-2xl bg-stem overflow-hidden shadow-sm shrink-0 relative">
+            <!-- 스트림 있으면 video, 없으면 기존 placeholder -->
+            <video
+              v-if="cameraStream"
+              ref="videoEl"
+              autoplay
+              muted
+              playsinline
+              class="h-36 w-full object-cover"
+            />
+            <div v-else class="flex h-36 w-full flex-col items-center justify-center gap-2">
+              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-stem-light/35">
+                <span class="text-xl">📷</span>
+              </div>
+              <p class="text-[11px] font-bold text-peach">카메라 미리보기</p>
+              <p class="text-[10px] text-peach/85">카메라 허용 후 활성화</p>
             </div>
-            <p class="text-[11px] font-bold text-peach">카메라 미리보기</p>
-            <p class="text-[10px] text-peach/85">백엔드 연결 후 활성화</p>
+            <canvas ref="canvasEl" class="hidden" />  <!-- 스냅샷용 숨김 캔버스 -->
+            <div class="absolute bottom-2 right-2 rounded-lg bg-black/55 px-2 py-1 font-black text-[10px] text-peach/90">
+              다음 확인: {{ nextSnapshotCountdown }}
+            </div>
           </div>
-          <!-- 다음 확인 카운트다운: 백엔드가 줄 값 표시 자리 -->
-          <div class="absolute bottom-2 right-2 rounded-lg bg-black/55 px-2 py-1 font-black text-[10px] text-peach/90">
-            다음 확인: {{ nextSnapshotCountdown }}
-          </div>
-        </div>
 
         <!-- 배터리 절약 모드 안내 -->
         <div
@@ -177,7 +186,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 
-const props = defineProps(['allPlans', 'currentDate', 'startTaskIndex']);
+//cameraStream추가
+const props = defineProps(['allPlans', 'currentDate', 'startTaskIndex', 'cameraStream']);
 const emit = defineEmits(['update:allPlans', 'session-end']);
 
 // ─── 상태 ────────────────────────────────────────────
@@ -314,6 +324,47 @@ onMounted(() => {
 onUnmounted(() => {
   stopTimer();
 });
+
+// 카메라 관련 ref 추가
+const cameraStream = ref(null);
+const videoEl = ref(null);      // <video> 엘리먼트 참조
+const canvasEl = ref(null);     // <canvas> 엘리먼트 참조 (스냅샷용)
+
+// 부모(App.vue)에서 스트림을 prop으로 받거나, 직접 여기서 시작
+// → App.vue에서 @allow="onCameraAllow" 로 스트림 전달받는 방식 사용
+
+// 카메라 스트림 연결
+watch(() => props.cameraStream, (stream) => {
+  if (stream && videoEl.value) {
+    videoEl.value.srcObject = stream;
+    cameraStream.value = stream;
+  }
+}, { immediate: true });
+
+// 5분마다 스냅샷 찍기 (카운트다운 로직 재활용)
+watch(nextSnapshotSec, (sec) => {
+  if (sec === 0 && cameraStream.value) {
+    takeSnapshot();
+  }
+});
+
+function takeSnapshot() {
+  if (!videoEl.value || !canvasEl.value) return;
+  const ctx = canvasEl.value.getContext('2d');
+  canvasEl.value.width = videoEl.value.videoWidth;
+  canvasEl.value.height = videoEl.value.videoHeight;
+  ctx.drawImage(videoEl.value, 0, 0);
+  // 여기서 자리 비움 판단 로직 추가 가능 (face-api.js 등)
+  addLog('present', getTimeStr());  // 임시: 항상 있음으로 기록
+}
+
+// 언마운트 시 카메라 끄기
+onUnmounted(() => {
+  stopTimer();
+  cameraStream.value?.getTracks().forEach(t => t.stop());
+});
+
+
 </script>
 
 <style scoped>
