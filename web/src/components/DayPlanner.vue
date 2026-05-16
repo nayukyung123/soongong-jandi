@@ -515,7 +515,8 @@ const emit = defineEmits([
   'plan-added',
   'plan-timer-started',
   'request-plan-compose',
-  'request-plan-edit'
+  'request-plan-edit',
+  'before-start', 
 ]);
 
 /** 상단 큰 작성 블록 표시 여부 */
@@ -535,8 +536,10 @@ function startTimerForPlan(planId) {
   if (!isPlanDateToday.value) return;
   const plan = currentPlans.value.find((p) => p.id === planId);
   if (!plan || plan.completed) return;
-  const ok = planTimer.startPlanImmediate(planId);
-  if (ok) emit('plan-timer-started');
+  emit('before-start', () => {
+    const ok = planTimer.startPlanImmediate(planId);
+    if (ok) emit('plan-timer-started');
+  });
 }
 
 /** 완료된 계획은 시작 불가. 같은 줄에서 타이머가 돌아가는 동안은 시작 버튼 숨김 */

@@ -58,6 +58,7 @@
             class="min-h-0 flex-1"
             :focus-edit-plan-id="plannerFocusPlanId"
             @plan-timer-started="emit('close')"
+            @before-start="emit('before-start', $event)"
           />
           <button
             type="button"
@@ -85,7 +86,7 @@ const props = defineProps({
   currentDate: { type: Date, required: true }
 });
 
-const emit = defineEmits(['close', 'update:allPlans', 'update:currentDate']);
+const emit = defineEmits(['close', 'update:allPlans', 'update:currentDate', 'before-start']);
 
 const uiStore = useUiStore();
 const { plannerFocusPlanId } = storeToRefs(uiStore);

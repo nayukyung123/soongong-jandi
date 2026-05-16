@@ -140,6 +140,7 @@
       v-model:all-plans="plansStore.allPlans"
       v-model:current-date="plansStore.selectedDate"
       @close="uiStore.closePlannerModal"
+      @before-start="requestCameraAndStart($event)"
     />
 
     <PlanComposeModal
@@ -174,8 +175,8 @@
 
   <CameraPermissionModal
     :show="showCameraModal"
-    @allow="showCameraModal"
-    @later="showCameraModal = false"
+    @allow="onCameraAllow"
+    @later="onCameraLater"
   />
   <!-- 여기까지가 추가된 파일 -->
 
@@ -244,6 +245,32 @@ const cameraStream = ref(null);
 function onCameraAllow(stream) {
   cameraStream.value = stream;
   showCameraModal.value = false;
+  // pendingTimerAction 추가
+  pendingTimerAction.value?.();
+  pendingTimerAction.value = null;
+}
+
+// 추가: 타이머 시작 전 카메라 권한 체크
+const pendingTimerAction = ref(null);  // 권한 후 실행할 함수 저장
+
+function requestCameraAndStart(action) {
+  if (cameraStream.value) {
+    // 이미 권한 있으면 바로 실행
+    action();
+  } else {
+    // 권한 없으면 모달 띄우고 액션 저장
+    pendingTimerAction.value = action;
+    showCameraModal.value = true;
+  }
+}
+
+
+
+function onCameraLater() {
+  showCameraModal.value = false;
+  // 나중에 → 카메라 없이 그냥 타이머 시작
+  pendingTimerAction.value?.();
+  pendingTimerAction.value = null;
 }
 
 
