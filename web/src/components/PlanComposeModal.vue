@@ -35,6 +35,7 @@
             :current-date="currentDate"
             @update:all-plans="emit('update:allPlans', $event)"
             @plan-added="close"
+            @before-start="emit('before-start', $event)"
           />
         </div>
       </div>

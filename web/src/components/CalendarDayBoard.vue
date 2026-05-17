@@ -12,6 +12,7 @@
             @update:all-plans="$emit('update:allPlans', $event)"
             @request-plan-compose="$emit('request-plan-compose')"
             @request-plan-edit="$emit('request-plan-edit', $event)"
+            @before-start="emit('before-start', $event)"
           />
         </div>
       </div>
