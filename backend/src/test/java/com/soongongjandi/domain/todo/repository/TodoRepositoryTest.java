@@ -23,8 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(JpaAuditingConfig.class)
 @TestPropertySource(properties = {
         "spring.flyway.enabled=false",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect"
+        "spring.jpa.hibernate.ddl-auto=create-drop"
 })
 class TodoRepositoryTest {
 
@@ -56,6 +55,8 @@ class TodoRepositoryTest {
         em.flush();
     }
 
+    // Todo.create(...)는 startAt/endAt(nullable=false)을 설정하지 않으므로
+    // 해당 필드를 직접 지정할 수 있는 Todo.builder()를 사용한다.
     private Todo buildTodo(Member member, String title, int displayOrder, LocalDate todoDate) {
         return Todo.builder()
                 .member(member)
@@ -92,7 +93,7 @@ class TodoRepositoryTest {
 
         assertThat(result).hasSize(3);
         assertThat(result).extracting(Todo::getTitle)
-                .containsExactlyInAnyOrder("5월 첫날", "5월 중간", "5월 마지막날");
+                .containsExactly("5월 첫날", "5월 중간", "5월 마지막날");
     }
 
     @Test
