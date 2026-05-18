@@ -3,8 +3,8 @@ import { ref } from 'vue';
 import { useSessionStore } from './session';
 
 export const useUiStore = defineStore('ui', () => {
-  /** 메인은 달력(calendar) */
-  const currentPage = ref('calendar');
+  /** 메인 홈: 공부통계(stats) */
+  const currentPage = ref('stats');
   const plannerModalOpen = ref(false);
   /** 플래너 모달 오픈 시 해당 plan 행을 바로 편집 모드로 (일간 「수정」) */
   const plannerFocusPlanId = ref(null);
@@ -16,6 +16,14 @@ export const useUiStore = defineStore('ui', () => {
   function setPage(page) {
     const session = useSessionStore();
     if (!session.isStudying) currentPage.value = page;
+  }
+
+  function goHome() {
+    setPage('stats');
+  }
+
+  function goCalendar() {
+    setPage('calendar');
   }
 
   function openPlannerModal(planId = null) {
@@ -59,6 +67,8 @@ export const useUiStore = defineStore('ui', () => {
     planComposeOpen,
     planTimerDetailOpen,
     setPage,
+    goHome,
+    goCalendar,
     openPlannerModal,
     closePlannerModal,
     openPlanCompose,

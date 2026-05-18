@@ -3,7 +3,7 @@
     <Transition name="modal-fade">
       <div
         v-if="show"
-        class="camera-modal-backdrop fixed inset-y-0 right-0 left-56 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+        class="camera-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
         role="dialog"
         aria-modal="true"
         aria-labelledby="camera-modal-title"

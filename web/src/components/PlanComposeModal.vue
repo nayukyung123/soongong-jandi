@@ -2,7 +2,7 @@
   <Teleport to="body">
     <div
       v-if="show"
-      class="calendar-main-modal-backdrop fixed inset-y-0 right-0 left-56 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
+      class="calendar-main-modal-backdrop fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="plan-compose-title"

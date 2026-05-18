@@ -51,6 +51,9 @@
           <button type="button" class="calendar-nav-btn" @click="shiftPeriod(1)">
             {{ navNextLabel }}
           </button>
+          <button type="button" class="calendar-nav-btn calendar-nav-btn--home" @click="emit('go-home')">
+            홈으로
+          </button>
         </div>
       </div>
     </header>
@@ -97,7 +100,8 @@ const emit = defineEmits([
   'update:allPlans',
   'open-planner',
   'request-plan-compose',
-  'request-plan-edit'
+  'request-plan-edit',
+  'go-home'
 ]);
 
 function onDayViewOpenCompose() {
