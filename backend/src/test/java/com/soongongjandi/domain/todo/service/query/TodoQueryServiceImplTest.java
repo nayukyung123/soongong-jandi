@@ -11,7 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.soongongjandi.domain.todo.dto.response.TodoMonthlyResponse;
+import com.soongongjandi.domain.todo.dto.response.TodoResponse;
 import com.soongongjandi.domain.todo.entity.Todo;
 import com.soongongjandi.domain.todo.repository.TodoRepository;
 import com.soongongjandi.global.common.exception.BusinessException;
@@ -282,12 +282,12 @@ class TodoQueryServiceImplTest {
     }
 
     // ───────────────────────────────────────────────────────────
-    // 11. repository가 반환한 Todo 목록이 TodoMonthlyResponse로 매핑되어 반환된다
+    // 11. repository가 반환한 Todo 목록이 TodoResponse로 매핑되어 반환된다
     // ───────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("repository가 반환한 Todo 목록이 id/title/todoDate 값이 올바른 TodoMonthlyResponse 목록으로 매핑된다")
-    void repository_반환_Todo가_TodoMonthlyResponse로_매핑된다() {
+    @DisplayName("repository가 반환한 Todo 목록이 id/title/todoDate 값이 올바른 TodoResponse 목록으로 매핑된다")
+    void repository_반환_Todo가_TodoResponse로_매핑된다() {
         Long memberId = 1L;
         LocalDate date1 = LocalDate.of(2026, 5, 5);
         LocalDate date2 = LocalDate.of(2026, 5, 10);
@@ -299,7 +299,7 @@ class TodoQueryServiceImplTest {
                 eq(memberId), eq(LocalDate.of(2026, 5, 1)), eq(LocalDate.of(2026, 5, 31))))
                 .thenReturn(List.of(todo1, todo2));
 
-        List<TodoMonthlyResponse> result = todoQueryService.getTodoList(memberId, 2026, 5, null, null);
+        List<TodoResponse> result = todoQueryService.getTodoList(memberId, 2026, 5, null, null);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).id()).isEqualTo(101L);
@@ -322,7 +322,7 @@ class TodoQueryServiceImplTest {
                 eq(memberId), any(), any()))
                 .thenReturn(List.of());
 
-        List<TodoMonthlyResponse> result = todoQueryService.getTodoList(memberId, 2026, 5, null, null);
+        List<TodoResponse> result = todoQueryService.getTodoList(memberId, 2026, 5, null, null);
 
         assertThat(result).isEmpty();
         verify(todoRepository, never()).findByMemberIdAndTodoDateOrderByDisplayOrderAsc(any(), any());

@@ -10,7 +10,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.soongongjandi.domain.todo.dto.response.TodoMonthlyResponse;
+import com.soongongjandi.domain.todo.dto.response.TodoResponse;
 import com.soongongjandi.domain.todo.repository.TodoRepository;
 import com.soongongjandi.global.common.exception.BusinessException;
 import com.soongongjandi.global.common.exception.ErrorCode;
@@ -34,7 +34,7 @@ public class TodoQueryServiceImpl implements TodoQueryService {
 	 *   주별 조회 범위는 인접 월로 넘어가는 날짜까지 포함한 7일(월~일) 전체이다.
 	 */
 	@Override
-	public List<TodoMonthlyResponse> getTodoList(Long memberId, Integer year, Integer month, Integer week, Integer day) {
+	public List<TodoResponse> getTodoList(Long memberId, Integer year, Integer month, Integer week, Integer day) {
 		if (month == null || month < 1 || month > 12) {
 			throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "month는 1~12 사이 필수값입니다.");
 		}
@@ -49,7 +49,7 @@ public class TodoQueryServiceImpl implements TodoQueryService {
 			}
 			LocalDate target = yearMonth.atDay(day);
 			return todoRepository.findByMemberIdAndTodoDateOrderByDisplayOrderAsc(memberId, target).stream()
-					.map(TodoMonthlyResponse::from)
+					.map(TodoResponse::from)
 					.toList();
 		}
 
@@ -76,7 +76,7 @@ public class TodoQueryServiceImpl implements TodoQueryService {
 
 		return todoRepository.findByMemberIdAndTodoDateBetweenOrderByTodoDateAscDisplayOrderAsc(
 						memberId, start, end).stream()
-				.map(TodoMonthlyResponse::from)
+				.map(TodoResponse::from)
 				.toList();
 	}
 
