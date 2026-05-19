@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.soongongjandi.domain.todo.dto.response.TodoDailyResponse;
+import com.soongongjandi.domain.todo.dto.response.TodoWeeklyResponse;
 import com.soongongjandi.domain.todo.service.query.TodoQueryService;
 import com.soongongjandi.global.common.response.ApiResponse;
 
@@ -35,5 +36,15 @@ public class TodoV1Controller {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         return ApiResponse.success(todoQueryService.getDaily(memberId, date));
+    }
+
+    // TODO(인증): 위와 동일 — memberId 미주입 시 0건 반환.
+    @Operation(summary = "할 일 주간 조회", description = "기준 날짜가 속한 일~토 주의 각 날짜별 타일 상태를 조회한다.")
+    @GetMapping("/weekly")
+    public ApiResponse<TodoWeeklyResponse> getWeekly(
+            @AuthenticationPrincipal Long memberId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ApiResponse.success(todoQueryService.getWeekly(memberId, date));
     }
 }

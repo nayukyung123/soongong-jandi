@@ -13,7 +13,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.soongongjandi.domain.studylog.entity.StudyLog;
 import com.soongongjandi.domain.studylog.repository.StudyLogRepository;
+import com.soongongjandi.domain.todo.dto.response.DaySummary;
 import com.soongongjandi.domain.todo.dto.response.TodoDailyResponse;
+import com.soongongjandi.domain.todo.dto.response.TodoWeeklyResponse;
 import com.soongongjandi.domain.todo.entity.TileVariant;
 import com.soongongjandi.domain.todo.entity.Todo;
 import com.soongongjandi.domain.todo.repository.TodoRepository;
@@ -172,5 +174,55 @@ class TodoQueryServiceImplTest {
         TodoDailyResponse result = todoQueryService.getDaily(1L, date);
 
         assertThat(result.tileVariant()).isEqualTo(TileVariant.GRASS);
+    }
+
+    @Test
+    @DisplayName("주간 조회 - 월 경계를 넘는 주(2026-04-26~05-02)도 7일 전체를 반환한다")
+    void 주간조회_월경계를_넘어도_7일을_반환한다() {
+        LocalDate anchor = LocalDate.of(2026, 4, 28);
+        LocalDate start = LocalDate.of(2026, 4, 26);
+        LocalDate end = LocalDate.of(2026, 5, 2);
+        when(todoRepository.findByMemberIdAndTodoDateBetweenOrderByTodoDateAscDisplayOrderAsc(1L, start, end))
+                .thenReturn(List.of());
+
+        TodoWeeklyResponse result = todoQueryService.getWeekly(1L, anchor);
+
+        assertThat(result.view()).isEqualTo("weekly");
+        assertThat(result.year()).isEqualTo(2026);
+        assertThat(result.month()).isEqualTo(4);
+        assertThat(result.days()).hasSize(7);
+        assertThat(result.days().get(0).planDate()).isEqualTo(start);
+        assertThat(result.days().get(6).planDate()).isEqualTo(end);
+    }
+
+    @Test
+    @DisplayName("주간 조회 - 날짜별 planCount/completedCount와 tileVariant가 계산된다")
+    void 주간조회_날짜별_집계와_타일이_계산된다() {
+        LocalDate anchor = LocalDate.of(2026, 4, 28);
+        LocalDate start = LocalDate.of(2026, 4, 26);
+        LocalDate end = LocalDate.of(2026, 5, 2);
+        LocalDate dayWithPlans = LocalDate.of(2026, 4, 28);
+
+        Todo todo1 = buildTodo(1L, "할 일 1", dayWithPlans, 0);
+        Todo todo2 = buildTodo(2L, "할 일 2", dayWithPlans, 1);
+        when(todoRepository.findByMemberIdAndTodoDateBetweenOrderByTodoDateAscDisplayOrderAsc(1L, start, end))
+                .thenReturn(List.of(todo1, todo2));
+        when(studyLogRepository.findByTodoIdIn(anyCollection()))
+                .thenReturn(List.of(buildStudyLog(todo1, LocalTime.of(10, 0))));
+
+        TodoWeeklyResponse result = todoQueryService.getWeekly(1L, anchor);
+
+        DaySummary withPlans = result.days().stream()
+                .filter(d -> d.planDate().equals(dayWithPlans))
+                .findFirst().orElseThrow();
+        assertThat(withPlans.planCount()).isEqualTo(2);
+        assertThat(withPlans.completedCount()).isEqualTo(1);
+        assertThat(withPlans.tileVariant()).isEqualTo(TileVariant.GRASS);
+
+        DaySummary emptyDay = result.days().stream()
+                .filter(d -> d.planDate().equals(start))
+                .findFirst().orElseThrow();
+        assertThat(emptyDay.planCount()).isZero();
+        assertThat(emptyDay.tileVariant()).isEqualTo(TileVariant.SOIL);
     }
 }
