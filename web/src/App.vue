@@ -71,10 +71,10 @@
         <div class="flex gap-3">
           <button
             type="button"
-            @click="sessionStore.discardSession"
+            @click="sessionStore.returnFromEndModal"
             class="flex-1 py-3 border-2 border-gray-200 rounded-2xl font-black text-sm hover:bg-gray-50 transition"
           >
-            버리기
+            되돌아가기
           </button>
           <button
             type="button"

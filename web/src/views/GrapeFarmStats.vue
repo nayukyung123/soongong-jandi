@@ -16,8 +16,9 @@
     <!-- 빨간 지붕 집 ↔ 보라 지붕 창고 (갈색 밭 가장자리) -->
     <div class="stats-home-walker" aria-hidden="true">
       <div class="stats-home-walker__sprite">
-        <div class="stats-home-walker__facing">
-          <div class="stats-home-walker__stride">
+        <div class="stats-home-walker__facing-shell">
+          <div class="stats-home-walker__facing">
+            <div class="stats-home-walker__stride">
           <img
             src="/images/stats/farmer-walker-right.png"
             alt=""
@@ -34,43 +35,50 @@
             height="180"
             decoding="async"
           />
+            </div>
           </div>
         </div>
       </div>
     </div>
 
     <header class="stats-home-user-panel relative z-[6] shrink-0 self-start">
-      <div class="stats-home-user-panel__card">
-        <div class="flex items-start justify-between gap-3">
-          <div class="flex min-w-0 items-center gap-3">
-            <span
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-2xl leading-none"
-              aria-hidden="true"
-            >🍇</span>
-            <div class="min-w-0">
-              <p class="text-[10px] font-black uppercase tracking-wide text-brand-600">
-                포도공부
-              </p>
-              <h1 class="truncate text-base font-black text-gray-900">
-                {{ userProfile.name }}
-              </h1>
-              <p v-if="isAuthenticated" class="mt-0.5 text-xs font-bold text-gray-500">
-                Lv.{{ userProfile.level }}
-              </p>
-              <p v-else class="mt-0.5 text-xs font-bold text-gray-500">
-                게스트 · 로그인 시 기록 저장
-              </p>
-            </div>
-          </div>
-          <SocialLoginButtons v-if="!isAuthenticated" class="shrink-0" />
-          <button
-            v-else
-            type="button"
-            class="shrink-0 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-black text-gray-600 transition hover:bg-white"
-            @click="logout"
-          >
-            로그아웃
-          </button>
+      <div class="stats-home-user-panel__frame">
+        <img
+          src="/images/stats/sun-user-panel.png"
+          alt=""
+          class="stats-home-user-panel__sun"
+          width="192"
+          height="192"
+          decoding="async"
+          aria-hidden="true"
+        />
+        <div
+          class="stats-home-user-panel__content"
+          :class="{ 'stats-home-user-panel__content--guest': !isAuthenticated }"
+        >
+          <template v-if="isAuthenticated">
+            <p class="stats-home-user-panel__label">포도공부</p>
+            <h1 class="stats-home-user-panel__name">
+              {{ userProfile.name }}
+            </h1>
+            <p class="stats-home-user-panel__meta">
+              Lv.{{ userProfile.level }}
+            </p>
+            <button
+              type="button"
+              class="stats-home-user-panel__logout"
+              @click="logout"
+            >
+              로그아웃
+            </button>
+          </template>
+          <template v-else>
+            <p class="stats-home-user-panel__label">로그인</p>
+            <p class="stats-home-user-panel__guest-hint">
+              기록을 저장하려면 로그인하세요
+            </p>
+            <SocialLoginButtons compact class="stats-home-user-panel__social" />
+          </template>
         </div>
       </div>
     </header>
@@ -291,7 +299,7 @@ const recentOverflowRecords = computed(() => {
   width: min(92vw, 22rem);
   max-width: 100%;
   margin-inline: auto;
-  margin-top: -2.75rem;
+  margin-top: -5.5rem;
   flex-shrink: 0;
   min-height: 18.5rem;
   padding-bottom: 1.5rem;
@@ -300,7 +308,7 @@ const recentOverflowRecords = computed(() => {
 @media (min-width: 768px) {
   .stats-home-stage {
     width: min(92vw, 24rem);
-    margin-top: -3rem;
+    margin-top: -6.25rem;
     min-height: 20rem;
     padding-bottom: 2rem;
   }
@@ -329,7 +337,7 @@ const recentOverflowRecords = computed(() => {
 .stats-home-stage__farmer {
   position: absolute;
   z-index: 12;
-  bottom: 2.25rem;
+  bottom: 5rem;
   left: -3.75rem;
   width: min(8rem, 36cqw);
 }
@@ -339,24 +347,106 @@ const recentOverflowRecords = computed(() => {
   filter: brightness(1.05);
 }
 
-/* 좌측 상단 사용자 정보 — 배경 위 가독용 흰 박스 */
+/* 좌측 상단 사용자 정보 — 태양 일러스트 */
 .stats-home-user-panel {
-  width: min(100%, 22rem);
+  width: min(100%, 12.5rem);
 }
 
-.stats-home-user-panel__card {
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.96);
-  padding: 0.875rem 1rem;
-  box-shadow:
-    0 4px 20px rgba(35, 25, 45, 0.12),
-    0 1px 0 rgba(255, 255, 255, 0.8) inset;
+.stats-home-user-panel__frame {
+  position: relative;
+  width: 100%;
+}
+
+.stats-home-user-panel__sun {
+  display: block;
+  width: 100%;
+  height: auto;
+  mix-blend-mode: lighten;
+  pointer-events: none;
+  user-select: none;
+}
+
+.stats-home-user-panel__content {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: auto;
+}
+
+.stats-home-user-panel__content--guest {
+  width: 58%;
+}
+
+.stats-home-user-panel__guest-hint {
+  margin: 0.125rem 0 0.375rem;
+  font-size: 0.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #4a3520;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.stats-home-user-panel__social {
+  width: 100%;
+}
+
+.stats-home-user-panel__label {
+  margin: 0;
+  font-size: 0.5625rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5c3d1e;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.stats-home-user-panel__name {
+  margin: 0.125rem 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 900;
+  line-height: 1.2;
+  color: #1a1208;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.stats-home-user-panel__meta {
+  margin: 0.125rem 0 0;
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: #4a3520;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.stats-home-user-panel__logout {
+  margin-top: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: rgba(26, 18, 8, 0.12);
+  font-size: 0.5625rem;
+  font-weight: 800;
+  color: #3d2a14;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.stats-home-user-panel__logout:hover {
+  background: rgba(26, 18, 8, 0.2);
 }
 
 @media (min-width: 768px) {
-  .stats-home-user-panel__card {
-    padding: 1rem 1.125rem;
+  .stats-home-user-panel {
+    width: min(100%, 14rem);
+  }
+
+  .stats-home-user-panel__name {
+    font-size: 0.8125rem;
   }
 }
 
@@ -381,20 +471,49 @@ const recentOverflowRecords = computed(() => {
   will-change: left, top, opacity;
 }
 
-/* 왕복(20s×2) 시 돌아올 때 좌우 반전 — 이동 애니메이션과 동기(40s) */
-.stats-home-walker__facing {
+/*
+ * 역방향에서만 scaleX(-1): 보라→꺾임(↖) + 꺾임→위·↗(8~37% 역재생)까지 동일 적용
+ * — 후자에서 inner가 -1인데 이동은 위쪽이라 shell -1을 곱해 +1로 맞춤(거꾸로 걷기 완화)
+ * 마지막 짧은 구간(0~8% 역)만 shell 1
+ */
+.stats-home-walker__facing-shell {
   transform-origin: center bottom;
-  animation: walker-return-flip 40s linear infinite;
+  animation: walker-purple-return-shell 40s linear infinite;
 }
 
-@keyframes walker-return-flip {
+@keyframes walker-purple-return-shell {
   0%,
-  49.99% {
+  49.999% {
     transform: scaleX(1);
   }
   50%,
-  100% {
+  95.999% {
     transform: scaleX(-1);
+  }
+  96%,
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+/* 위치와 동일 20s alternate — 꺾임(8%, 37%)에서만 scaleX 전환 */
+.stats-home-walker__facing {
+  transform-origin: center bottom;
+  animation: walker-facing-along-path 20s linear infinite alternate;
+}
+
+@keyframes walker-facing-along-path {
+  0%,
+  7.999% {
+    transform: scaleX(1);
+  }
+  8%,
+  36.999% {
+    transform: scaleX(-1);
+  }
+  37%,
+  100% {
+    transform: scaleX(1);
   }
 }
 
@@ -499,11 +618,13 @@ const recentOverflowRecords = computed(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .stats-home-walker__sprite,
+  .stats-home-walker__facing-shell,
   .stats-home-walker__facing {
     animation: none;
     opacity: 1;
   }
 
+  .stats-home-walker__facing-shell,
   .stats-home-walker__facing {
     transform: none;
   }
@@ -526,24 +647,24 @@ const recentOverflowRecords = computed(() => {
   width: 100%;
   max-width: 20rem;
   margin-inline: auto;
-  transform: translateY(-2.75rem);
+  transform: translateY(-5.5rem);
 }
 
 @media (min-width: 768px) {
   .stats-home-stage__tree {
     max-width: 22rem;
-    transform: translateY(-3rem);
+    transform: translateY(-6.25rem);
   }
 }
 
 .stats-home-stage__tree:hover {
-  transform: translateY(-2.9rem) scale(1.02);
+  transform: translateY(-5.65rem) scale(1.02);
   filter: brightness(1.05);
 }
 
 @media (min-width: 768px) {
   .stats-home-stage__tree:hover {
-    transform: translateY(-3.15rem) scale(1.02);
+    transform: translateY(-6.4rem) scale(1.02);
   }
 }
 
@@ -568,7 +689,7 @@ const recentOverflowRecords = computed(() => {
 .stats-home-stage__calendar {
   position: absolute;
   z-index: 30;
-  bottom: 14%;
+  bottom: 29%;
   left: 74%;
   width: min(5.5rem, 26cqw);
 }

@@ -1,5 +1,13 @@
 <template>
   <div class="calendar-page">
+    <button
+      type="button"
+      class="calendar-back-btn"
+      aria-label="홈으로 돌아가기"
+      @click="emit('go-home')"
+    >
+      &lt;
+    </button>
     <header class="calendar-header">
       <h2 class="calendar-title">
         <img
@@ -50,9 +58,6 @@
           </button>
           <button type="button" class="calendar-nav-btn" @click="shiftPeriod(1)">
             {{ navNextLabel }}
-          </button>
-          <button type="button" class="calendar-nav-btn calendar-nav-btn--home" @click="emit('go-home')">
-            홈으로
           </button>
         </div>
       </div>

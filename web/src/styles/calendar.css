@@ -1,6 +1,7 @@
 /* 달력 전용 — 밭 프레임 배경 + 투명 날짜 칸 오버레이 (루트 폭 기준 cqw) */
 
 .calendar-page {
+  position: relative;
   container-type: inline-size;
   container-name: calendar-page;
   box-sizing: border-box;
@@ -24,11 +25,49 @@
   padding-inline: clamp(0.85rem, 5.5cqw, 3.25rem);
 }
 
+.calendar-back-btn {
+  position: absolute;
+  top: clamp(0.45rem, 2.2cqw, 0.75rem);
+  left: clamp(0.9rem, 5cqw, 1.6rem);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(2rem, 10cqw, 2.5rem);
+  height: clamp(2rem, 10cqw, 2.5rem);
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color-brand-600, #6f3faf) 28%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-farm-white, #ffffff) 92%, var(--color-brand-50, #e6d6fa));
+  font-size: clamp(1.15rem, calc(0.5rem + 4.5cqw), 1.5rem);
+  font-weight: 900;
+  line-height: 1;
+  color: var(--color-brand-600, #6f3faf);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.calendar-back-btn:hover {
+  background: var(--color-brand-50, #e6d6fa);
+  border-color: color-mix(in srgb, var(--color-brand-600, #6f3faf) 45%, transparent);
+  transform: translateX(-1px);
+}
+
+.calendar-back-btn:focus-visible {
+  outline: 2px solid var(--color-brand-600, #6f3faf);
+  outline-offset: 2px;
+}
+
 .calendar-header {
   display: flex;
   flex-direction: column;
   gap: clamp(0.25rem, 1.5cqw, 0.65rem);
   margin-bottom: clamp(0.25rem, 1.8cqw, 0.65rem);
+  padding-left: clamp(2.6rem, 12.5cqw, 3.2rem);
   flex-shrink: 0;
 }
 
@@ -81,17 +120,6 @@
 .calendar-nav-btn:hover {
   background: var(--color-brand-50, #e6d6fa);
   border-color: color-mix(in srgb, var(--color-brand-600, #6f3faf) 45%, transparent);
-}
-
-.calendar-nav-btn--home {
-  background: var(--color-brand-600, #6f3faf);
-  color: var(--color-farm-white, #ffffff);
-  border-color: transparent;
-}
-
-.calendar-nav-btn--home:hover {
-  background: var(--color-brand-700, #4f2480);
-  color: var(--color-farm-white, #ffffff);
 }
 
 /* 월 그리드 패널 — 밭/잔디 프레임 배경 */
