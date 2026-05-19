@@ -15,12 +15,16 @@ import com.soongongjandi.domain.studylog.entity.StudyLog;
 import com.soongongjandi.domain.studylog.repository.StudyLogRepository;
 import com.soongongjandi.domain.todo.dto.response.DaySummary;
 import com.soongongjandi.domain.todo.dto.response.TodoDailyResponse;
+import com.soongongjandi.domain.todo.dto.response.TodoMonthlyResponse;
 import com.soongongjandi.domain.todo.dto.response.TodoWeeklyResponse;
 import com.soongongjandi.domain.todo.entity.TileVariant;
 import com.soongongjandi.domain.todo.entity.Todo;
 import com.soongongjandi.domain.todo.repository.TodoRepository;
+import com.soongongjandi.global.common.exception.BusinessException;
+import com.soongongjandi.global.common.exception.ErrorCode;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.when;
 
@@ -224,5 +228,56 @@ class TodoQueryServiceImplTest {
                 .findFirst().orElseThrow();
         assertThat(emptyDay.planCount()).isZero();
         assertThat(emptyDay.tileVariant()).isEqualTo(TileVariant.SOIL);
+    }
+
+    @Test
+    @DisplayName("월간 조회 - 해당 월 1일~말일 전체 날짜를 days로 반환한다")
+    void 월간조회_해당월_전체_날짜를_반환한다() {
+        LocalDate start = LocalDate.of(2026, 2, 1);
+        LocalDate end = LocalDate.of(2026, 2, 28);
+        when(todoRepository.findByMemberIdAndTodoDateBetweenOrderByTodoDateAscDisplayOrderAsc(1L, start, end))
+                .thenReturn(List.of());
+
+        TodoMonthlyResponse result = todoQueryService.getMonthly(1L, 2026, 2);
+
+        assertThat(result.view()).isEqualTo("monthly");
+        assertThat(result.year()).isEqualTo(2026);
+        assertThat(result.month()).isEqualTo(2);
+        assertThat(result.days()).hasSize(28);
+        assertThat(result.days().get(0).planDate()).isEqualTo(start);
+        assertThat(result.days().get(27).planDate()).isEqualTo(end);
+    }
+
+    @Test
+    @DisplayName("월간 조회 - year가 null이면 현재 연도로 해석한다")
+    void 월간조회_year가_null이면_현재연도로_해석한다() {
+        int currentYear = LocalDate.now().getYear();
+        LocalDate start = LocalDate.of(currentYear, 6, 1);
+        LocalDate end = LocalDate.of(currentYear, 6, 30);
+        when(todoRepository.findByMemberIdAndTodoDateBetweenOrderByTodoDateAscDisplayOrderAsc(1L, start, end))
+                .thenReturn(List.of());
+
+        TodoMonthlyResponse result = todoQueryService.getMonthly(1L, null, 6);
+
+        assertThat(result.year()).isEqualTo(currentYear);
+        assertThat(result.days()).hasSize(30);
+    }
+
+    @Test
+    @DisplayName("월간 조회 - month가 null이면 BusinessException(INVALID_INPUT_VALUE)을 던진다")
+    void 월간조회_month가_null이면_예외를_던진다() {
+        assertThatThrownBy(() -> todoQueryService.getMonthly(1L, 2026, null))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                        .isEqualTo(ErrorCode.INVALID_INPUT_VALUE));
+    }
+
+    @Test
+    @DisplayName("월간 조회 - month가 1~12 범위 밖이면 BusinessException(INVALID_INPUT_VALUE)을 던진다")
+    void 월간조회_month가_범위밖이면_예외를_던진다() {
+        assertThatThrownBy(() -> todoQueryService.getMonthly(1L, 2026, 13))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                        .isEqualTo(ErrorCode.INVALID_INPUT_VALUE));
     }
 }

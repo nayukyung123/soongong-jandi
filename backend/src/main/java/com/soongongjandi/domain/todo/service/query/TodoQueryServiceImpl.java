@@ -2,6 +2,7 @@ package com.soongongjandi.domain.todo.service.query;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,10 +17,13 @@ import com.soongongjandi.domain.studylog.repository.StudyLogRepository;
 import com.soongongjandi.domain.todo.dto.response.DayPlan;
 import com.soongongjandi.domain.todo.dto.response.DaySummary;
 import com.soongongjandi.domain.todo.dto.response.TodoDailyResponse;
+import com.soongongjandi.domain.todo.dto.response.TodoMonthlyResponse;
 import com.soongongjandi.domain.todo.dto.response.TodoWeeklyResponse;
 import com.soongongjandi.domain.todo.entity.TileVariant;
 import com.soongongjandi.domain.todo.entity.Todo;
 import com.soongongjandi.domain.todo.repository.TodoRepository;
+import com.soongongjandi.global.common.exception.BusinessException;
+import com.soongongjandi.global.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +34,27 @@ public class TodoQueryServiceImpl implements TodoQueryService {
 
     private final TodoRepository todoRepository;
     private final StudyLogRepository studyLogRepository;
+
+    @Override
+    public TodoMonthlyResponse getMonthly(Long memberId, Integer year, Integer month) {
+        if (month == null || month < 1 || month > 12) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "month는 1~12 사이 필수값입니다.");
+        }
+        int resolvedYear = (year != null) ? year : LocalDate.now().getYear();
+        YearMonth yearMonth = YearMonth.of(resolvedYear, month);
+        LocalDate start = yearMonth.atDay(1);
+        LocalDate end = yearMonth.atEndOfMonth();
+        List<DaySummary> days = buildDaySummaries(memberId, start, end);
+        return new TodoMonthlyResponse("monthly", resolvedYear, month, days);
+    }
+
+    @Override
+    public TodoWeeklyResponse getWeekly(Long memberId, LocalDate date) {
+        LocalDate start = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
+        LocalDate end = start.plusDays(6);
+        List<DaySummary> days = buildDaySummaries(memberId, start, end);
+        return new TodoWeeklyResponse("weekly", date.getYear(), date.getMonthValue(), days);
+    }
 
     @Override
     public TodoDailyResponse getDaily(Long memberId, LocalDate date) {
@@ -46,14 +71,6 @@ public class TodoQueryServiceImpl implements TodoQueryService {
         TileVariant tileVariant = TileVariant.of(planCount, completedCount, date.isAfter(LocalDate.now()));
 
         return new TodoDailyResponse("daily", date, tileVariant, plans);
-    }
-
-    @Override
-    public TodoWeeklyResponse getWeekly(Long memberId, LocalDate date) {
-        LocalDate start = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
-        LocalDate end = start.plusDays(6);
-        List<DaySummary> days = buildDaySummaries(memberId, start, end);
-        return new TodoWeeklyResponse("weekly", date.getYear(), date.getMonthValue(), days);
     }
 
     /** start~end 범위의 모든 날짜에 대해 날짜별 요약을 만든다. 계획 0건 날짜도 포함한다. */
