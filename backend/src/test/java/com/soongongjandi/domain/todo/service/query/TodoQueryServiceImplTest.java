@@ -140,4 +140,37 @@ class TodoQueryServiceImplTest {
         assertThat(result.tileVariant()).isEqualTo(TileVariant.SOIL);
         assertThat(result.plans()).hasSize(1);
     }
+
+    @Test
+    @DisplayName("일간 조회 - StudyLog가 없으면 completed=false, studyContent=null, tileVariant는 SPROUT이다")
+    void 일간조회_studyLog가_없으면_미완료다() {
+        LocalDate date = LocalDate.of(2020, 5, 10);
+        Todo todo = buildTodo(1L, "할 일", date, 0);
+        when(todoRepository.findByMemberIdAndTodoDateOrderByDisplayOrderAsc(1L, date))
+                .thenReturn(List.of(todo));
+        when(studyLogRepository.findByTodoIdIn(anyCollection()))
+                .thenReturn(List.of());
+
+        TodoDailyResponse result = todoQueryService.getDaily(1L, date);
+
+        assertThat(result.plans().get(0).completed()).isFalse();
+        assertThat(result.plans().get(0).studyContent()).isNull();
+        assertThat(result.tileVariant()).isEqualTo(TileVariant.SPROUT);
+    }
+
+    @Test
+    @DisplayName("일간 조회 - 일부만 완료이면 tileVariant는 GRASS이다")
+    void 일간조회_일부완료이면_GRASS다() {
+        LocalDate date = LocalDate.of(2020, 5, 10);
+        Todo todo1 = buildTodo(1L, "할 일 1", date, 0);
+        Todo todo2 = buildTodo(2L, "할 일 2", date, 1);
+        when(todoRepository.findByMemberIdAndTodoDateOrderByDisplayOrderAsc(1L, date))
+                .thenReturn(List.of(todo1, todo2));
+        when(studyLogRepository.findByTodoIdIn(anyCollection()))
+                .thenReturn(List.of(buildStudyLog(todo1, LocalTime.of(10, 0))));
+
+        TodoDailyResponse result = todoQueryService.getDaily(1L, date);
+
+        assertThat(result.tileVariant()).isEqualTo(TileVariant.GRASS);
+    }
 }
