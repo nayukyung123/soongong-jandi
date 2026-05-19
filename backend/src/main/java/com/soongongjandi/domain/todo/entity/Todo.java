@@ -34,6 +34,9 @@ public class Todo extends BaseEntity {
     @Column(nullable = false)
     private String title;
 
+    @Column(columnDefinition = "TEXT")
+    private String detail;
+
     // TODO: 3NF에 의해 일단은 삭제. 추후에 역정규화 때 추가 고려
     // @Builder.Default
     // @Enumerated(EnumType.STRING)
