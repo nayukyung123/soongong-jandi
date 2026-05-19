@@ -600,3 +600,9 @@ docs/superpowers/
 
 # docker
 .docker/
+
+
+# AI 디렉토리
+/ai/runs/
+/ai/test_images/
+/ai/yolo11s.pt
