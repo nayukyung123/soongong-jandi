@@ -25,7 +25,8 @@ function onStopTimer() {
     elapsed: r.elapsedSeconds,
     accumulated: r.elapsedSeconds,
     absenceTime: 0,
-    absenceCount: 0
+    absenceCount: 0,
+    undo: r.undo,
   });
 }
 </script>

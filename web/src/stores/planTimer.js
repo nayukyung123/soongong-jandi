@@ -99,11 +99,8 @@ export const usePlanTimerStore = defineStore('planTimer', () => {
   }
 
   /**
-   * 완전 종료: 오늘 날짜의 선택된 플랜에 실행 시간(초)을 더합니다.
-   */
-  /**
-   * 완전 종료. 성공 시 이번 세션 구간의 초를 반환하고, idle이면 null.
-   * (호출 측에서 공부 기록 모달 등에 넘길 수 있음)
+   * 완전 종료: 플랜에 실행 시간(초) 반영 후 idle.
+   * 반환값의 undo로 공부 기록 모달에서 되돌아가기(일시정지·시간 복원) 가능.
    */
   function stop() {
     if (status.value === 'idle') return null;
@@ -120,6 +117,23 @@ export const usePlanTimerStore = defineStore('planTimer', () => {
     const key = sessionDateKey.value ?? plans.dateKey;
     const list = plans.allPlans[key] || [];
     const id = selectedPlanId.value;
+    const planBefore = id != null ? list.find((p) => String(p.id) === String(id)) : null;
+
+    /** @type {null | { type: 'planTimer', dateKey: string, planId: string | number, executedSeconds: number, completed: boolean, accumulatedMs: number, selectedPlanId: string | number, sessionDateKey: string }} */
+    let undo = null;
+    if (planBefore) {
+      undo = {
+        type: 'planTimer',
+        dateKey: key,
+        planId: id,
+        executedSeconds: typeof planBefore.executedSeconds === 'number' ? planBefore.executedSeconds : 0,
+        completed: !!planBefore.completed,
+        accumulatedMs: totalMs,
+        selectedPlanId: id,
+        sessionDateKey: key,
+      };
+    }
+
     const next = list.map((p) => {
       if (String(p.id) !== String(id)) return p;
       const prev = typeof p.executedSeconds === 'number' ? p.executedSeconds : 0;
@@ -133,7 +147,35 @@ export const usePlanTimerStore = defineStore('planTimer', () => {
     sessionDateKey.value = null;
     stopTick();
     tick.value += 1;
-    return { elapsedSeconds: seconds };
+    return { elapsedSeconds: seconds, undo };
+  }
+
+  /** 공부 기록 모달에서 되돌아가기 — 플랜 되돌린 뒤 타이머를 곧바로 재개(running) */
+  function restoreAfterStopUndo(undo) {
+    if (!undo || undo.type !== 'planTimer') return false;
+    const plans = usePlansStore();
+    const key = undo.dateKey;
+    const list = plans.allPlans[key];
+    if (!Array.isArray(list)) return false;
+    const idx = list.findIndex((p) => String(p.id) === String(undo.planId));
+    if (idx === -1) return false;
+    const p = list[idx];
+    const next = [...list];
+    next[idx] = {
+      ...p,
+      executedSeconds: undo.executedSeconds,
+      completed: undo.completed,
+    };
+    plans.allPlans = { ...plans.allPlans, [key]: next };
+
+    selectedPlanId.value = undo.selectedPlanId;
+    sessionDateKey.value = undo.sessionDateKey;
+    accumulatedMs.value = undo.accumulatedMs;
+    segmentStartedAt.value = Date.now();
+    status.value = 'running';
+    startTick();
+    tick.value += 1;
+    return true;
   }
 
   function selectPlan(planId) {
@@ -152,6 +194,7 @@ export const usePlanTimerStore = defineStore('planTimer', () => {
     startPlanImmediate,
     pause,
     stop,
+    restoreAfterStopUndo,
     selectPlan,
     canStartOrResume,
   };

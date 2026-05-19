@@ -1,5 +1,13 @@
 <template>
   <div class="calendar-page">
+    <button
+      type="button"
+      class="calendar-back-btn"
+      aria-label="홈으로 돌아가기"
+      @click="emit('go-home')"
+    >
+      &lt;
+    </button>
     <header class="calendar-header">
       <h2 class="calendar-title">
         <img
@@ -97,7 +105,8 @@ const emit = defineEmits([
   'update:allPlans',
   'open-planner',
   'request-plan-compose',
-  'request-plan-edit'
+  'request-plan-edit',
+  'go-home'
 ]);
 
 function onDayViewOpenCompose() {

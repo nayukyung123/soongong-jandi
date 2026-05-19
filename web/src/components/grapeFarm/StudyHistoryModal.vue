@@ -1,8 +1,8 @@
 <template>
-  <Teleport to="#main-modal-teleport">
+  <Teleport to="body">
     <div
       v-if="show"
-      class="pointer-events-auto absolute inset-0 z-[1] flex min-h-0 min-w-0 flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-black/45 p-4 backdrop-blur-sm"
+      class="fixed inset-0 z-[10190] flex min-h-0 min-w-0 flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-black/45 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="study-history-modal-title"

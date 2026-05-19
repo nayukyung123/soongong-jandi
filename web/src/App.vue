@@ -1,7 +1,5 @@
 <template>
   <div class="flex h-screen min-h-0 w-full overflow-visible bg-app-canvas font-sans text-app-ink">
-    <Sidebar :active-page="currentPage" @change-page="uiStore.setPage" />
-
     <main class="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-auto">
       <StudySession
         v-if="isStudying"
@@ -12,23 +10,17 @@
         @session-end="sessionStore.endStudy"
       />
 
+      <GrapeFarmStats v-if="currentPage === 'stats' && !isStudying" />
+
       <CalendarView
-        v-if="currentPage === 'calendar' && !isStudying"
+        v-else-if="currentPage === 'calendar' && !isStudying"
         v-model:all-plans="plansStore.allPlans"
         v-model:selected-date="plansStore.selectedDate"
         @open-planner="() => uiStore.openPlannerModal()"
         @request-plan-compose="uiStore.openPlanCompose"
+        @go-home="uiStore.goHome"
         @request-plan-edit="(planId) => uiStore.openPlannerModal(planId)"
       />
-
-      <GrapeFarmStats v-else-if="currentPage === 'stats' && !isStudying" />
-
-      <div
-        v-else-if="currentPage !== 'calendar' && !isStudying"
-        class="flex flex-1 items-center justify-center"
-      >
-        <p class="text-gray-300 font-black text-lg">🚧 준비 중입니다</p>
-      </div>
 
       <!-- 통계 등: 모달을 뷰포트가 아니라 main 영역 중앙에 맞출 때 사용 -->
       <div
@@ -79,10 +71,10 @@
         <div class="flex gap-3">
           <button
             type="button"
-            @click="sessionStore.discardSession"
+            @click="sessionStore.returnFromEndModal"
             class="flex-1 py-3 border-2 border-gray-200 rounded-2xl font-black text-sm hover:bg-gray-50 transition"
           >
-            버리기
+            되돌아가기
           </button>
           <button
             type="button"
@@ -187,7 +179,6 @@
 // ref 임시 추가
 import { computed, watch, ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import Sidebar from './components/Sidebar.vue';
 import PlannerModal from './components/PlannerModal.vue';
 import PlanComposeModal from './components/PlanComposeModal.vue';
 import PlanTimerDetailModal from './components/PlanTimerDetailModal.vue';

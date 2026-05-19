@@ -184,11 +184,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 
 //cameraStream추가
+import { useSessionStore } from '../stores/session.js';
+
 const props = defineProps(['allPlans', 'currentDate', 'startTaskIndex', 'cameraStream']);
 const emit = defineEmits(['update:allPlans', 'session-end']);
+
+const sessionStore = useSessionStore();
 
 // ─── 상태 ────────────────────────────────────────────
 const elapsed      = ref(0);   // 공부 경과 (초)
@@ -203,6 +207,11 @@ const observationLogs = ref([]);
 const nextSnapshotSec = ref(300);
 
 const currentTaskIdx = ref(props.startTaskIndex ?? 0);
+
+// 카메라 관련 ref (라이프사이클에서 사용하므로 위에 둠)
+const cameraStream = ref(null);
+const videoEl = ref(null);
+const canvasEl = ref(null);
 
 // ─── 날짜 키 & 계획 ──────────────────────────────────
 const dateKey = computed(() => {
@@ -311,24 +320,46 @@ const stopSession = () => {
     elapsed: elapsed.value,
     accumulated: accumulated.value,
     absenceTime: absenceTime.value,
-    absenceCount: absenceCount.value
+    absenceCount: absenceCount.value,
+    undo: {
+      type: 'studySession',
+      snapshot: {
+        elapsed: elapsed.value,
+        accumulated: accumulated.value,
+        absenceTime: absenceTime.value,
+        absenceCount: absenceCount.value,
+        isPaused: isPaused.value,
+        currentTaskIdx: currentTaskIdx.value,
+        nextSnapshotSec: nextSnapshotSec.value,
+        observationLogs: observationLogs.value.map((e) => ({ ...e })),
+      },
+    },
   });
 };
 
 // ─── 라이프사이클 ────────────────────────────────────
 onMounted(() => {
+  const snap = sessionStore.takeStudyResumeSnapshot();
+  if (snap) {
+    elapsed.value = snap.elapsed;
+    accumulated.value = snap.accumulated;
+    absenceTime.value = snap.absenceTime;
+    absenceCount.value = snap.absenceCount;
+    /* 모달에서 되돌아온 경우 바로 측정 재개 */
+    isPaused.value = false;
+    currentTaskIdx.value = snap.currentTaskIdx;
+    nextSnapshotSec.value = snap.nextSnapshotSec;
+    observationLogs.value = snap.observationLogs?.length ? snap.observationLogs.map((e) => ({ ...e })) : [];
+  } else {
+    addLog('present', getTimeStr());
+  }
   startTimer();
-  addLog('present', getTimeStr());
 });
 
 onUnmounted(() => {
   stopTimer();
+  cameraStream.value?.getTracks().forEach((t) => t.stop());
 });
-
-// 카메라 관련 ref 추가
-const cameraStream = ref(null);
-const videoEl = ref(null);      // <video> 엘리먼트 참조
-const canvasEl = ref(null);     // <canvas> 엘리먼트 참조 (스냅샷용)
 
 // 부모(App.vue)에서 스트림을 prop으로 받거나, 직접 여기서 시작
 // → App.vue에서 @allow="onCameraAllow" 로 스트림 전달받는 방식 사용
@@ -357,13 +388,6 @@ function takeSnapshot() {
   // 여기서 자리 비움 판단 로직 추가 가능 (face-api.js 등)
   addLog('present', getTimeStr());  // 임시: 항상 있음으로 기록
 }
-
-// 언마운트 시 카메라 끄기
-onUnmounted(() => {
-  stopTimer();
-  cameraStream.value?.getTracks().forEach(t => t.stop());
-});
-
 
 </script>
 
