@@ -280,4 +280,13 @@ class TodoQueryServiceImplTest {
                 .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
                         .isEqualTo(ErrorCode.INVALID_INPUT_VALUE));
     }
+
+    @Test
+    @DisplayName("월간 조회 - month가 0이면 BusinessException(INVALID_INPUT_VALUE)을 던진다")
+    void 월간조회_month가_0이면_예외를_던진다() {
+        assertThatThrownBy(() -> todoQueryService.getMonthly(1L, 2026, 0))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                        .isEqualTo(ErrorCode.INVALID_INPUT_VALUE));
+    }
 }
