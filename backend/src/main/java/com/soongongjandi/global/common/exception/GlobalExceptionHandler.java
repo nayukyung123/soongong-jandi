@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @Slf4j
@@ -59,6 +60,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(ErrorCode.INVALID_TYPE_VALUE.getStatus())
                 .body(ApiResponse.error(ErrorCode.INVALID_TYPE_VALUE));
+    }
+
+    /**
+     * 필수 요청 파라미터 누락 예외 처리
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingParam(MissingServletRequestParameterException e) {
+        String message = "필수 요청 파라미터가 누락되었습니다: " + e.getParameterName();
+        log.warn("MissingParam: {}", message);
+        return ResponseEntity
+                .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+                .body(ApiResponse.error(ErrorCode.INVALID_INPUT_VALUE, message));
     }
 
     /**

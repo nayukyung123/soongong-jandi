@@ -3,81 +3,124 @@ package com.soongongjandi.domain.todo.service.query;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.soongongjandi.domain.todo.dto.response.TodoResponse;
+import com.soongongjandi.domain.studylog.entity.StudyLog;
+import com.soongongjandi.domain.studylog.repository.StudyLogRepository;
+import com.soongongjandi.domain.todo.dto.response.DayPlan;
+import com.soongongjandi.domain.todo.dto.response.DaySummary;
+import com.soongongjandi.domain.todo.dto.response.TodoDailyResponse;
+import com.soongongjandi.domain.todo.dto.response.TodoMonthlyResponse;
+import com.soongongjandi.domain.todo.dto.response.TodoWeeklyResponse;
+import com.soongongjandi.domain.todo.entity.TileVariant;
+import com.soongongjandi.domain.todo.entity.Todo;
 import com.soongongjandi.domain.todo.repository.TodoRepository;
 import com.soongongjandi.global.common.exception.BusinessException;
 import com.soongongjandi.global.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TodoQueryServiceImpl implements TodoQueryService {
 
-	private final TodoRepository todoRepository;
+    private final TodoRepository todoRepository;
+    private final StudyLogRepository studyLogRepository;
 
-	/**
-	 * year/month/week/day 조회.
-	 * - day 있으면 일별, week 있으면 주별, 둘 다 없으면 월별 조회.
-	 * - year null이면 현재 연도로 해석한다.
-	 * - week는 ISO 캘린더 주 (월요일 시작). N주차 = 1일이 포함된 월~일 행을 1주차로 한다.
-	 *   주별 조회 범위는 인접 월로 넘어가는 날짜까지 포함한 7일(월~일) 전체이다.
-	 */
-	@Override
-	public List<TodoResponse> getTodoList(Long memberId, Integer year, Integer month, Integer week, Integer day) {
-		if (month == null || month < 1 || month > 12) {
-			throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "month는 1~12 사이 필수값입니다.");
-		}
+    @Override
+    public TodoMonthlyResponse getMonthly(Long memberId, Integer year, Integer month) {
+        if (month == null || month < 1 || month > 12) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "month는 1~12 사이 필수값입니다.");
+        }
+        int resolvedYear = (year != null) ? year : LocalDate.now().getYear();
+        YearMonth yearMonth = YearMonth.of(resolvedYear, month);
+        LocalDate start = yearMonth.atDay(1);
+        LocalDate end = yearMonth.atEndOfMonth();
+        List<DaySummary> days = buildDaySummaries(memberId, start, end);
+        return new TodoMonthlyResponse("monthly", resolvedYear, month, days);
+    }
 
-		int resolvedYear = (year != null) ? year : LocalDate.now().getYear();
-		YearMonth yearMonth = YearMonth.of(resolvedYear, month);
+    @Override
+    public TodoWeeklyResponse getWeekly(Long memberId, LocalDate date) {
+        LocalDate start = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
+        LocalDate end = start.plusDays(6);
+        List<DaySummary> days = buildDaySummaries(memberId, start, end);
+        return new TodoWeeklyResponse("weekly", date.getYear(), date.getMonthValue(), days);
+    }
 
-		// 일별 조회
-		if (day != null) {
-			if (day < 1 || day > yearMonth.lengthOfMonth()) {
-				throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "day가 해당 월의 범위를 벗어났습니다.");
-			}
-			LocalDate target = yearMonth.atDay(day);
-			return todoRepository.findByMemberIdAndTodoDateOrderByDisplayOrderAsc(memberId, target).stream()
-					.map(TodoResponse::from)
-					.toList();
-		}
+    @Override
+    public TodoDailyResponse getDaily(Long memberId, LocalDate date) {
+        List<Todo> todos = todoRepository
+                .findByMemberIdAndTodoDateOrderByDisplayOrderAsc(memberId, date);
+        Map<Long, StudyLog> studyLogByTodoId = findStudyLogs(todos);
 
-		// 주별 / 월별 조회 - 날짜 범위 계산
-		LocalDate start;
-		LocalDate end;
-		if (week != null) {
-			// 1일이 속한 월~일 행의 월요일 (전월로 넘어갈 수 있음)
-			LocalDate firstMonday = yearMonth.atDay(1)
-					.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-			// 말일이 속한 월~일 행의 월요일
-			LocalDate lastWeekMonday = yearMonth.atEndOfMonth()
-					.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-			int maxWeek = (int) ChronoUnit.WEEKS.between(firstMonday, lastWeekMonday) + 1;
-			if (week < 1 || week > maxWeek) {
-				throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "week가 해당 월의 범위를 벗어났습니다.");
-			}
-			start = firstMonday.plusWeeks(week - 1);
-			end = start.plusDays(6);
-		} else {
-			start = yearMonth.atDay(1);
-			end = yearMonth.atEndOfMonth();
-		}
+        List<DayPlan> plans = todos.stream()
+                .map(todo -> toDayPlan(todo, studyLogByTodoId.get(todo.getId())))
+                .toList();
 
-		return todoRepository.findByMemberIdAndTodoDateBetweenOrderByTodoDateAscDisplayOrderAsc(
-						memberId, start, end).stream()
-				.map(TodoResponse::from)
-				.toList();
-	}
+        int planCount = plans.size();
+        int completedCount = (int) plans.stream().filter(DayPlan::completed).count();
+        TileVariant tileVariant = TileVariant.of(planCount, completedCount, date.isAfter(LocalDate.now()));
 
+        return new TodoDailyResponse("daily", date, tileVariant, plans);
+    }
+
+    /** start~end 범위의 모든 날짜에 대해 날짜별 요약을 만든다. 계획 0건 날짜도 포함한다. */
+    private List<DaySummary> buildDaySummaries(Long memberId, LocalDate start, LocalDate end) {
+        List<Todo> todos = todoRepository
+                .findByMemberIdAndTodoDateBetweenOrderByTodoDateAscDisplayOrderAsc(memberId, start, end);
+        Map<Long, StudyLog> studyLogByTodoId = findStudyLogs(todos);
+
+        Map<LocalDate, List<Todo>> todosByDate = todos.stream()
+                .collect(Collectors.groupingBy(Todo::getTodoDate));
+
+        LocalDate today = LocalDate.now();
+        List<DaySummary> result = new ArrayList<>();
+        for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
+            List<Todo> dayTodos = todosByDate.getOrDefault(d, List.of());
+            int planCount = dayTodos.size();
+            int completedCount = (int) dayTodos.stream()
+                    .filter(t -> isCompleted(studyLogByTodoId.get(t.getId())))
+                    .count();
+            TileVariant tileVariant = TileVariant.of(planCount, completedCount, d.isAfter(today));
+            result.add(new DaySummary(d, tileVariant, planCount, completedCount));
+        }
+        return result;
+    }
+
+    /** todoId → StudyLog 맵. todo가 없으면 리포지토리를 호출하지 않는다. */
+    private Map<Long, StudyLog> findStudyLogs(List<Todo> todos) {
+        if (todos.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> todoIds = todos.stream().map(Todo::getId).toList();
+        return studyLogRepository.findByTodoIdIn(todoIds).stream()
+                .collect(Collectors.toMap(sl -> sl.getTodo().getId(), sl -> sl));
+    }
+
+    /** 완료 = StudyLog 존재 && endedAt non-null. */
+    private boolean isCompleted(StudyLog studyLog) {
+        return studyLog != null && studyLog.getEndedAt() != null;
+    }
+
+    private DayPlan toDayPlan(Todo todo, StudyLog studyLog) {
+        return new DayPlan(
+                todo.getId(),
+                todo.getTitle(),
+                todo.getDetail(),
+                studyLog != null ? studyLog.getStudyContent() : null,
+                todo.getStartAt(),
+                todo.getEndAt(),
+                todo.getDisplayOrder(),
+                isCompleted(studyLog)
+        );
+    }
 }

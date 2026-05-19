@@ -1,11 +1,16 @@
 package com.soongongjandi.domain.todo.service.query;
 
-import java.util.List;
+import java.time.LocalDate;
 
-import com.soongongjandi.domain.todo.dto.response.TodoResponse;
+import com.soongongjandi.domain.todo.dto.response.TodoDailyResponse;
+import com.soongongjandi.domain.todo.dto.response.TodoMonthlyResponse;
+import com.soongongjandi.domain.todo.dto.response.TodoWeeklyResponse;
 
 public interface TodoQueryService {
 
-	List<TodoResponse> getTodoList(Long memberId, Integer year, Integer month, Integer week, Integer day);
+    TodoMonthlyResponse getMonthly(Long memberId, Integer year, Integer month);
 
+    TodoWeeklyResponse getWeekly(Long memberId, LocalDate date);
+
+    TodoDailyResponse getDaily(Long memberId, LocalDate date);
 }
