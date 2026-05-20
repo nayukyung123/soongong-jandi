@@ -259,8 +259,8 @@ function requestCameraAndStart(action) {
 
 function onCameraLater() {
   showCameraModal.value = false;
-  // 나중에 → 카메라 없이 그냥 타이머 시작
-  pendingTimerAction.value?.();
+  // 나중에 → 카메라 없으면 타이머 시작 X
+  // pendingTimerAction.value?.(); // 카메라 없이 타이머 시작할수 있게 만들기
   pendingTimerAction.value = null;
 }
 
