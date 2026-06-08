@@ -3,9 +3,11 @@ package com.soongongjandi.domain.auth.service;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.soongongjandi.domain.auth.dto.LoginRequest;
 import com.soongongjandi.domain.auth.dto.TokenResponse;
 import com.soongongjandi.domain.auth.oauth.OAuthClient;
 import com.soongongjandi.domain.auth.oauth.OAuthUserInfo;
@@ -29,6 +31,7 @@ public class AuthService {
     private final List<OAuthClient> oAuthClients;
     private final MemberRepository memberRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public TokenResponse loginSocial(Provider provider, String code, String redirectUri) {
@@ -67,6 +70,49 @@ public class AuthService {
                 .build();
 
         return memberRepository.save(newMember);
+    }
+
+    @Transactional
+    public TokenResponse loginLocal(LoginRequest loginRequest) {
+        Member member = memberRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."));
+
+        if (member.getPassword() == null || !passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다.");
+        }
+
+        if (!member.isActive()) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "비활성화된 계정입니다.");
+        }
+
+        String accessToken = jwtTokenProvider.createAccessToken(member.getId());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getId());
+
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    @Transactional
+    public TokenResponse reissue(String refreshToken) {
+        jwtTokenProvider.validateToken(refreshToken);
+        Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (!member.isActive()) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "비활성화된 계정입니다.");
+        }
+
+        String newAccessToken = jwtTokenProvider.createAccessToken(member.getId());
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getId());
+
+        return TokenResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .build();
     }
 
     private OAuthClient getClient(Provider provider) {
