@@ -61,3 +61,4 @@ cookie:
   path: /api/v1/auth
   domain: ""
   refresh-token-name: refreshToken
+  secure: ${COOKIE_SECURE:false}
