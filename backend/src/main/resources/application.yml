@@ -61,3 +61,8 @@ cookie:
   path: /api/v1/auth
   domain: ""
   refresh-token-name: refreshToken
+  secure: ${COOKIE_SECURE:false}
+
+app:
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:5173}
+

@@ -17,7 +17,7 @@ export function getOAuthLoginUrl(provider) {
   }
 
   const pathTemplate = (
-    import.meta.env.VITE_OAUTH_AUTHORIZATION_PATH ?? '/oauth2/authorization'
+    import.meta.env.VITE_OAUTH_AUTHORIZATION_PATH ?? '/api/v1/auth/login'
   ).replace(/\/$/, '');
   return `${pathTemplate}/${provider}`;
 }
